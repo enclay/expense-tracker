@@ -2,18 +2,24 @@ from telegram.ext import (
     Application,
     CallbackContext,
     CommandHandler,
-    filters,
-    MessageHandler
+    MessageHandler,
+    filters
 )
 from telegram import (
     Update,
     ReplyKeyboardMarkup
 ) 
+from openai import (
+    OpenAI
+)
 import logging 
-from typing import Dict
+import sqlite3
+import re
+
+from typing import List, Tuple
 from enum import Enum
 
-from bot.utils.config import TELEGRAM_BOT_TOKEN
+from bot.utils.config import TELEGRAM_BOT_TOKEN, OPENAI_API_KEY, DB_PATH
 
 
 logging.basicConfig(
@@ -24,15 +30,100 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-class UserState(Enum):
-    AWAITING_EXPENSE = 0
+class ChatState(Enum):
+    EXPENSE_INPUT = 0
 
-user_states: Dict[int, UserState] = {}
+
+def parse_expenses(user_input: str):
+    try:
+        client = OpenAI(api_key = OPENAI_API_KEY)
+
+        prompt = f"""
+        Extract the expense description and cost from the following message:
+        "{user_input}"
+        
+        - If a cost is found, return it as a float.
+        - If no cost is found, return 5.00 as default.
+        - If the cost includes currency symbols ($, €, etc.), remove them.
+        - Return a JSON response like this:
+        
+        {{"expense": "Lunch at Subway", "cost": 12.50}}
+        """
+
+        messages = [
+            {"role": "system", "content": "You are a finance assistant extracting expenses from user text."},
+            {"role": "user", "content": prompt}
+        ]
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            max_tokens=50,
+        )
+
+        gpt_output = response.choices[0].message.content
+
+        match = re.search(r'{"expense": "(.*?)", "cost": (\d+\.\d+)}', gpt_output)
+        if match:
+            expense = match.group(1)
+            cost = float(match.group(2))
+            return expense, cost
+
+    except Exception as e:
+        logger.error(f"OpenAI API Error: {e}")
+
+    return user_input, 0
+
+
+def sql_add_expense(user_id: int, expense: str, cost: float):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO Expense (user_id, expense, cost, currency, time) VALUES (?, ?, ?, ?, strftime('%s', 'now'))",
+        (user_id, expense, cost, 0)
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def sql_list_expenses(user_id: int) -> List[Tuple]:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT id, expense, cost, currency, time FROM Expense WHERE user_id = ? ORDER BY time DESC",
+        (user_id,)
+    )
+
+    expenses = cursor.fetchall()
+    conn.close()
+    return expenses
+
+
+async def handle_expense(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
+    expense_text = update.message.text
+
+    expense, cost = parse_expenses(expense_text)
+    sql_add_expense(user_id, expense, cost)
+    context.user_data.pop("chat_state", None)
+
+    await update.message.reply_text("Expense added successfully!")
+
+
+async def handle_message(update: Update, context: CallbackContext):
+    chat_state = context.user_data.get("chat_state", None)
+
+    if chat_state == ChatState.EXPENSE_INPUT:
+        await handle_expense(update, context)
+    else:
+        await update.message.reply_text("Please use the /add command to add an expense.")
 
 
 async def add_handle(update: Update, context: CallbackContext):
-    user_id = update.effective_user.id
-    user_states[user_id] = UserState.AWAITING_EXPENSE
+    context.user_data["chat_state"] = ChatState.EXPENSE_INPUT
 
     cancel_markup = ReplyKeyboardMarkup(
             [["Cancel"]],
@@ -42,29 +133,32 @@ async def add_handle(update: Update, context: CallbackContext):
     await update.message.reply_text("Please enter your item.", reply_markup=cancel_markup)
 
 
-async def handle_expense(update: Update, context: CallbackContext):
+async def list_handle(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
-    user_states.pop(user_id)
+    expenses = sql_list_expenses(user_id)
 
-    await update.message.reply_text("Expense added successfully!")
+    if not expenses:
+        await update.message.reply_text("No expenses found.")
+        return
 
+    message = "Your Expenses:\n"
+    for exp in expenses:
+        expense_id, description, cost, currency, timestamp = exp
+        message += f"{description} - ${cost} (Time: {timestamp})\n"
 
-async def handle_message(update: Update, context: CallbackContext):
-    user_id = update.effective_user.id
+    await update.message.reply_text(message)
 
-    if user_states.get(user_id) == UserState.AWAITING_EXPENSE:
-        await handle_expense(update, context)
-    else:
-        await update.message.reply_text("Please use the /add command to add an expense.")
 
 async def start_handle(update: Update, context: CallbackContext):
     await update.message.reply_text("Welcome to Finance Tracker Bot!")
+
 
 def main():
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start_handle))
     app.add_handler(CommandHandler("add", add_handle))
+    app.add_handler(CommandHandler("list", list_handle))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.run_polling()
 
