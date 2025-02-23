@@ -8,7 +8,10 @@ from telegram.ext import (
 from telegram import (
     Update,
     ReplyKeyboardMarkup
-) 
+)
+from telegram.constants import (
+    ParseMode
+)
 from openai import (
     OpenAI
 )
@@ -106,6 +109,10 @@ async def handle_expense(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     expense_text = update.message.text
 
+    if expense_text.lower() == "cancel":
+        context.user_data.pop("chat_state", None)
+        return
+
     expense, cost = parse_expenses(expense_text)
     sql_add_expense(user_id, expense, cost)
     context.user_data.pop("chat_state", None)
@@ -115,7 +122,7 @@ async def handle_expense(update: Update, context: CallbackContext):
 
 async def handle_message(update: Update, context: CallbackContext):
     chat_state = context.user_data.get("chat_state", None)
-
+    
     if chat_state == ChatState.EXPENSE_INPUT:
         await handle_expense(update, context)
     else:
@@ -150,11 +157,26 @@ async def list_handle(update: Update, context: CallbackContext):
 
 
 async def start_handle(update: Update, context: CallbackContext):
-    await update.message.reply_text("Welcome to Finance Tracker Bot!")
+    welcome_message = (
+        "*Expense Tracker Bot*\n\n"
+        "*Easily track your expenses and stay on top of your budget!*\n\n"
+        "*/add* - Add new expense\n"
+        "*/list* - List all expenses\n"
+        "*/start* - Learn how to use the bot\n\n"
+        "Start tracking now by using */add*!"
+    )
+    await update.message.reply_text(welcome_message, parse_mode=ParseMode.MARKDOWN)
 
+async def set_commands(application: Application):
+    commands = [
+        ("start", "Start the bot"),
+        ("add", "Add an expense"),
+        ("list", "List all expenses"),
+    ]
+    await application.bot.set_my_commands(commands)
 
 def main():
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).post_init(set_commands).build()
 
     app.add_handler(CommandHandler("start", start_handle))
     app.add_handler(CommandHandler("add", add_handle))
