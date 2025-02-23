@@ -39,7 +39,7 @@ class ChatState(Enum):
 
 def parse_expenses(user_input: str):
     try:
-        client = OpenAI(api_key = OPENAI_API_KEY)
+        client = OpenAI(api_key=OPENAI_API_KEY)
 
         prompt = f"""
         Extract the expense description and cost from the following message:
@@ -183,7 +183,3 @@ def main():
     app.add_handler(CommandHandler("list", list_handle))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.run_polling()
-
-
-if __name__ == "__main__":
-    main()

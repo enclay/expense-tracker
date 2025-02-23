@@ -1,0 +1,21 @@
+[project]
+name = "bot"
+version = "0.1.0"
+description = "Expense Tracker Bot"
+authors = [
+    {name = "enclay",email = "enclayff@gmail.com"}
+]
+requires-python = ">=3.13"
+dependencies = [
+    "python-telegram-bot",
+    "python-dotenv",
+    "openai"
+]
+package_mode = false
+
+[tool.poetry.scripts]
+start = "bot.main:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
