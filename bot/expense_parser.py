@@ -6,6 +6,7 @@ from bot.utils.config import OPENAI_API_KEY
 logger = logging.getLogger(__name__)
 
 def parse_expenses(user_input: str):
+    """Parse the user input to extract the expense and cost."""
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
 

@@ -1,11 +1,18 @@
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
 from bot.database.operations import sql_add_expense, sql_list_expenses
 from bot.expense_parser import parse_expenses
 from bot.constants import ChatState
+from bot.utils.datetime import add_months
 
-async def handle_expense(update: Update, context: CallbackContext):
+from datetime import datetime
+import logging 
+
+logger = logging.getLogger(__name__)
+
+async def process_expense(update: Update, context: CallbackContext):
+    """ Process the expense and save to persistent storage"""
     user_id = update.effective_user.id
     expense_text = update.message.text
 
@@ -20,16 +27,18 @@ async def handle_expense(update: Update, context: CallbackContext):
     await update.message.reply_text("Expense added successfully!")
 
 
-async def handle_message(update: Update, context: CallbackContext):
+async def message_handle(update: Update, context: CallbackContext):
+    """Handle processing general messages such as new expense entry."""
     chat_state = context.user_data.get("chat_state", None)
     
     if chat_state == ChatState.EXPENSE_INPUT:
-        await handle_expense(update, context)
+        await process_expense(update, context)
     else:
-        await update.message.reply_text("Please use the /add command to add an expense.")
+        await update.message.reply_text("Unknown command. Please use */start* to see available commands.", parse_mode=ParseMode.MARKDOWN)
 
 
 async def add_handle(update: Update, context: CallbackContext):
+    """Handle adding a new expense."""
     context.user_data["chat_state"] = ChatState.EXPENSE_INPUT
 
     cancel_markup = ReplyKeyboardMarkup(
@@ -41,22 +50,73 @@ async def add_handle(update: Update, context: CallbackContext):
 
 
 async def list_handle(update: Update, context: CallbackContext):
+    """Handle displaying expenses for the current month with pagination."""
+    current_month = datetime.now().strftime("%Y-%m")
+    await refresh_list(update, context, current_month)
+
+async def refresh_list(update: Update, context: CallbackContext, month: str):
+    """Helper function which updates this list according to month"""
     user_id = update.effective_user.id
-    expenses = sql_list_expenses(user_id)
+
+    expenses = sql_list_expenses(user_id, month)
+    try:
+        dt = datetime.strptime(month, "%Y-%m")
+        month_title = dt.strftime("%B %Y")
+    except Exception:
+        month_title = month
 
     if not expenses:
-        await update.message.reply_text("No expenses found.")
-        return
+        message_text = f"No expenses found for {month_title}."
+    else:
+        message_text = f"*Expenses for {month_title}:*\n"
+        for exp in expenses:
+            expense_id, description, cost, currency, timestamp = exp
+            message_text += f"- {description} - ${cost}\n"
 
-    message = "Your Expenses:\n"
-    for exp in expenses:
-        expense_id, description, cost, currency, timestamp = exp
-        message += f"{description} - ${cost} (Time: {timestamp})\n"
+    keyboard = [
+        [
+            InlineKeyboardButton("← Previous", callback_data=f"expenses:prev:{month}"),
+            InlineKeyboardButton("Next →", callback_data=f"expenses:next:{month}")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(message)
+    if update.callback_query:
+        await update.callback_query.edit_message_text(
+            text=message_text,
+            reply_markup=reply_markup,
+            parse_mode=ParseMode.MARKDOWN
+        )
+    else:
+        await update.message.reply_text(
+            text=message_text,
+            reply_markup=reply_markup,
+            parse_mode=ParseMode.MARKDOWN
+        )
 
+async def change_month_callback(update: Update, context: CallbackContext):
+    """Callback function handling month navigation"""
+    query = update.callback_query
+    await query.answer()
+    data = query.data  # Expected format: "expenses:prev:YYYY-MM" or "expenses:next:YYYY-MM"
+    try:
+        _, direction, current_month = data.split(":")
+        dt = datetime.strptime(current_month, "%Y-%m")
+        if direction == "prev":
+            new_dt = add_months(dt, -1)
+        elif direction == "next":
+            new_dt = add_months(dt, 1)
+        else:
+            new_dt = dt
+        new_month = new_dt.strftime("%Y-%m")
+    except Exception as e:
+        logger.error(f"Error parsing callback data '{data}': {e}")
+        new_month = datetime.now().strftime("%Y-%m")
+
+    await refresh_list(update, context, new_month)
 
 async def start_handle(update: Update, context: CallbackContext):
+    """Handle the /start command."""
     welcome_message = (
         "*Expense Tracker Bot*\n\n"
         "*Easily track your expenses and stay on top of your budget!*\n\n"

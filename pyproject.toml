@@ -11,7 +11,6 @@ dependencies = [
     "python-dotenv",
     "openai"
 ]
-package_mode = false
 
 [tool.poetry.scripts]
 start = "bot.main:main"
