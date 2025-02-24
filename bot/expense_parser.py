@@ -1,7 +1,7 @@
-import logging
-import re
 from openai import OpenAI
 from bot.utils.config import OPENAI_API_KEY
+import logging
+import re
 
 logger = logging.getLogger(__name__)
 
