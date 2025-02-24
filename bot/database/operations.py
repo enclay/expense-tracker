@@ -3,6 +3,7 @@ from typing import List, Tuple
 from bot.utils.config import DB_PATH
 
 def sql_add_expense(user_id: int, expense: str, cost: float):
+    """Add an expense to the database."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -15,20 +16,8 @@ def sql_add_expense(user_id: int, expense: str, cost: float):
     conn.close()
 
 
-#def sql_list_expenses(user_id: int) -> List[Tuple]:
-#    conn = sqlite3.connect(DB_PATH)
-#    cursor = conn.cursor()
-#
-#    cursor.execute(
-#        "SELECT id, expense, cost, currency, time FROM Expense WHERE user_id = ? ORDER BY time DESC",
-#        (user_id,)
-#    )
-#
-#    expenses = cursor.fetchall()
-#    conn.close()
-#    return expenses
-
 def sql_list_expenses(user_id: int, month: str = None) -> List[Tuple]:
+    """Fetch all expenses for a user."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     if month:

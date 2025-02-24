@@ -8,7 +8,6 @@ import logging
 
 from bot.utils.config import TELEGRAM_BOT_TOKEN
 from bot.handlers import change_month_callback, start_handle, add_handle, list_handle, message_handle 
-from bot.handlers import change_month_callback
 from telegram.ext import CallbackQueryHandler
 
 logging.basicConfig(
