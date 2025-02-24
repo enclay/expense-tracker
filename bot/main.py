@@ -2,13 +2,23 @@ from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
+    CallbackQueryHandler,
     filters
 )
 import logging 
 
+from bot.handlers import (
+    list_expense_callback,
+    delete_expense_callback,
+    delete_expense_callback,
+    delete_handle,
+    start_handle,
+    add_handle,
+    list_handle,
+    message_handle,
+    delete_handle
+)
 from bot.utils.config import TELEGRAM_BOT_TOKEN
-from bot.handlers import change_month_callback, start_handle, add_handle, list_handle, message_handle 
-from telegram.ext import CallbackQueryHandler
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -22,6 +32,7 @@ async def set_commands(application: Application):
         ("start", "Start the bot"),
         ("add", "Add an expense"),
         ("list", "List all expenses"),
+        ("delete", "Delete an expense"),
     ]
     await application.bot.set_my_commands(commands)
 
@@ -35,6 +46,9 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handle))
 
     app.add_handler(CommandHandler("list", list_handle))
-    app.add_handler(CallbackQueryHandler(change_month_callback, pattern=r"^expenses:"))
+    app.add_handler(CallbackQueryHandler(list_expense_callback, pattern=r"^list:"))
+
+    app.add_handler(CommandHandler("delete", delete_handle))
+    app.add_handler(CallbackQueryHandler(delete_expense_callback, pattern=r"^delete:"))
 
     app.run_polling()

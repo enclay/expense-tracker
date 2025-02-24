@@ -44,3 +44,11 @@ def sql_list_expenses(user_id: int, month: str = None) -> List[Tuple]:
     expenses = cursor.fetchall()
     conn.close()
     return expenses
+
+def sql_delete_expense(expense_id: int):
+    """Delete an expense by its ID."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Expense WHERE id = ?", (expense_id,))
+    conn.commit()
+    conn.close()

@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
-from bot.database.operations import sql_add_expense, sql_list_expenses
+from bot.database.operations import sql_add_expense, sql_list_expenses, sql_delete_expense
 from bot.expense_parser import parse_expenses
 from bot.constants import ChatState
 from bot.utils.datetime import add_months
@@ -75,8 +75,8 @@ async def refresh_list(update: Update, context: CallbackContext, month: str):
 
     keyboard = [
         [
-            InlineKeyboardButton("← Previous", callback_data=f"expenses:prev:{month}"),
-            InlineKeyboardButton("Next →", callback_data=f"expenses:next:{month}")
+            InlineKeyboardButton("← Previous", callback_data=f"list:prev:{month}"),
+            InlineKeyboardButton("Next →", callback_data=f"list:next:{month}")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -94,11 +94,11 @@ async def refresh_list(update: Update, context: CallbackContext, month: str):
             parse_mode=ParseMode.MARKDOWN
         )
 
-async def change_month_callback(update: Update, context: CallbackContext):
+async def list_expense_callback(update: Update, context: CallbackContext):
     """Callback function handling month navigation"""
     query = update.callback_query
     await query.answer()
-    data = query.data  # Expected format: "expenses:prev:YYYY-MM" or "expenses:next:YYYY-MM"
+    data = query.data
     try:
         _, direction, current_month = data.split(":")
         dt = datetime.strptime(current_month, "%Y-%m")
@@ -115,6 +115,42 @@ async def change_month_callback(update: Update, context: CallbackContext):
 
     await refresh_list(update, context, new_month)
 
+
+async def delete_handle(update: Update, context: CallbackContext):
+    """Display all expenses for the current month as separate inline buttons for deletion."""
+    user_id = update.effective_user.id
+    current_month = datetime.now().strftime("%Y-%m")
+    expenses = sql_list_expenses(user_id, current_month)
+    
+    if not expenses:
+        await update.message.reply_text("No expenses found for the current month.")
+        return
+
+    keyboard = []
+    for exp in expenses:
+        expense_id, description, cost, currency, timestamp = exp
+        button_text = f"{description} - ${cost}"
+        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"delete:{expense_id}")])
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Select an expense to delete:", reply_markup=reply_markup)
+
+
+async def delete_expense_callback(update: Update, context: CallbackContext):
+    """Handle the deletion when a user clicks an inline button."""
+    query = update.callback_query
+    await query.answer()  # Acknowledge the callback query
+    
+    try:
+        _, expense_id_str = query.data.split(":")
+        expense_id = int(expense_id_str)
+        sql_delete_expense(expense_id)
+        await query.edit_message_text("Expense deleted successfully.")
+    except Exception as e:
+        logger.error(f"Error deleting expense: {e}")
+        await query.edit_message_text("Failed to delete expense. Please try again.")
+
+
 async def start_handle(update: Update, context: CallbackContext):
     """Handle the /start command."""
     welcome_message = (
@@ -122,6 +158,7 @@ async def start_handle(update: Update, context: CallbackContext):
         "*Easily track your expenses and stay on top of your budget!*\n\n"
         "*/add* - Add new expense\n"
         "*/list* - List all expenses\n"
+        "*/delete* - Delete an expense\n\n"
         "*/start* - Learn how to use the bot\n\n"
         "Start tracking now by using */add*!"
     )
