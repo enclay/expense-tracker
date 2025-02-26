@@ -10,7 +10,7 @@ from bot.handlers.start import start_handle
 from bot.handlers.message import message_input_handle
 from bot.handlers.add import add_handle, add_confirm_callback, add_cancel_callback
 from bot.handlers.list import list_handle, list_expense_callback
-from bot.handlers.delete import delete_handle, delete_expense_callback
+from bot.handlers.delete import delete_handle, delete_expense_callback, delete_cancel_callback
 from bot.utils.config import TELEGRAM_BOT_TOKEN
 
 logging.basicConfig(
@@ -45,5 +45,6 @@ def main():
 
     app.add_handler(CommandHandler("delete", delete_handle))
     app.add_handler(CallbackQueryHandler(delete_expense_callback, pattern=r"^delete:"))
+    app.add_handler(CallbackQueryHandler(delete_cancel_callback, pattern=r"^delete_cancel"))
 
     app.run_polling()

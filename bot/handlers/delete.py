@@ -22,10 +22,17 @@ async def delete_handle(update: Update, context: CallbackContext):
         expense_id, description, cost, currency, timestamp = exp
         button_text = f"{description} - ${cost}"
         keyboard.append([InlineKeyboardButton(button_text, callback_data=f"delete:{expense_id}")])
+
+    keyboard.append([InlineKeyboardButton("Cancel", callback_data="delete_cancel")])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Select an expense to delete:", reply_markup=reply_markup)
 
+async def delete_cancel_callback(update: Update, context: CallbackContext):
+    """ Delete the message and inform the user that the deletion is cancelled."""
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text("Deletion is cancelled by user.")
 
 async def delete_expense_callback(update: Update, context: CallbackContext):
     """Handle the deletion when a user clicks an inline button."""
