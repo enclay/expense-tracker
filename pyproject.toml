@@ -5,7 +5,7 @@ description = "Expense Tracker Bot"
 authors = [
     {name = "enclay",email = "enclayff@gmail.com"}
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "python-telegram-bot",
     "python-dotenv",
