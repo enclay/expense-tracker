@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS Expense (
     user_id INTEGER NOT NULL,
     expense TEXT NOT NULL,
 	cost REAL NOT NULL,
-    currency INTEGER NOT NULL,
+    currency TEXT NOT NULL,
     time INTEGER NOT NULL
 );
 
