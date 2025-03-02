@@ -16,8 +16,8 @@ async def process_expense(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     expense_text = update.message.text
 
-    expense, cost = parse_expenses(expense_text)
-    context.user_data["pending_expense"] = (expense, cost)
+    expense_data = parse_expenses(expense_text)
+    context.user_data["pending_expense"] = expense_data
 
     keyboard = [
         [
@@ -28,7 +28,7 @@ async def process_expense(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-            f"Parsed expense:\n\n*{expense}* - ${cost:.2f}\nDo you want to confirm?",
+            f"Parsed expense:\n\n*{expense_data.expense}* - {expense_data.cost:.2f} {expense_data.currency}\nDo you want to confirm?",
         reply_markup=reply_markup,
         parse_mode=ParseMode.MARKDOWN
     )
@@ -43,9 +43,8 @@ async def add_confirm_callback(update: Update, context: CallbackContext):
     if not pending:
         await query.edit_message_text("No pending expense found.")
         return
-    expense, cost = pending
     user_id = update.effective_user.id
-    sql_add_expense(user_id, expense, cost)
+    sql_add_expense(user_id, pending.expense, pending.cost, pending.currency)
 
     context.user_data.pop("pending_expense", None)
     context.user_data.pop("chat_state", None)
