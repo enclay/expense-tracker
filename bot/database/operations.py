@@ -5,33 +5,24 @@ from bot.utils.config import DB_PATH
 
 logger = logging.getLogger(__name__)
 
-def sql_add_expense(user_id: int, expense: str, cost: float, curr: str = "usd"):
+def sql_add_expense(user_id: int, expense: str, cost: float, currency: str = "usd", time: int = None):
     """Add an expense to the database."""
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO Expense (user_id, expense, cost, currency, time) VALUES (?, ?, ?, ?, strftime('%s', 'now'))",
-                (user_id, expense, cost, curr)
-            )
-            conn.commit()
-
+            if time:
+                cursor.execute(
+                    "INSERT INTO Expense (user_id, expense, cost, currency, time) VALUES (?, ?, ?, ?, ?)",
+                    (user_id, expense, cost, currency, time)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO Expense (user_id, expense, cost, currency, time) VALUES (?, ?, ?, ?, strftime('%s', 'now'))",
+                    (user_id, expense, cost, currency)
+                )
     except sqlite3.Error as e:
         logger.error(f"Error adding expense: {e}")
 
-def sql_add_expense_with_time(user_id: int, expense: str, cost: float, time: int, curr: str = "usd"):
-    """Add an expense to the database."""
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO Expense (user_id, expense, cost, currency, time) VALUES (?, ?, ?, ?, ?)",
-                (user_id, expense, cost, time, curr)
-            )
-            conn.commit()
-
-    except sqlite3.Error as e:
-        logger.error(f"Error adding expense: {e}")
 
 def sql_list_expenses(user_id: int, month: str = None) -> List[Tuple]:
     """Fetch all expenses for a user."""

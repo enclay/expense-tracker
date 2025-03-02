@@ -3,7 +3,7 @@ from datetime import datetime
 from io import BytesIO
 from telegram import Update, InputFile
 from telegram.ext import CallbackContext
-from bot.database.operations import sql_add_expense, sql_add_expense_with_time, sql_list_expenses
+from bot.database.operations import sql_add_expense, sql_list_expenses
 
 async def import_handle(update: Update, context: CallbackContext):
     """Import user's spendings from a JSON file."""
@@ -28,12 +28,12 @@ async def import_handle(update: Update, context: CallbackContext):
         count = 0
         for entry in data:
             if all(key in entry for key in ["expense", "cost", "currency", "time"]):
-                sql_add_expense_with_time(
+                sql_add_expense(
                     user_id,
                     entry["expense"],
                     float(entry["cost"]),
+                    entry["currency"],
                     int(entry["time"]),
-                    entry["currency"]
                 )
                 count += 1
             else:
