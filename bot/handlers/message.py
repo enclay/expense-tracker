@@ -9,7 +9,6 @@ from bot.database.operations import sql_add_expenses
 async def message_input_handle(update: Update, context: CallbackContext):
     """Handle processing general messages such as new expense entry."""
 
-    user_id = update.effective_user.id
     message_text = update.message.text
     
     intent = parse_intent(message_text)

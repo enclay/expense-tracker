@@ -1,13 +1,13 @@
 import logging
 import json
 from typing import List
-from dataclasses import dataclass
-from datetime import datetime
 from openai import OpenAI
+from datetime import datetime, timedelta
 from bot.utils.config import OPENAI_API_KEY
 from bot.database.models import Expense
 
 logger = logging.getLogger(__name__)
+
 
 def parse_expenses(user_input: str) -> List[Expense]:
     """Parse the user input to extract multiple expenses with cost, currency, and always set the current timestamp."""
@@ -21,7 +21,12 @@ def parse_expenses(user_input: str) -> List[Expense]:
         - Each expense should have:
           - "description" (description of expense)
           - "cost" (as a float)
-          - "currency" (ISO 4217: USD, EUR, RUB, GBP).
+          - "currency" (ISO 4217: USD, EUR, RUB, GBP)
+          - "time_offset" (relative time offset as **-Xd / +Xm format**, where X is a number):
+            - "-1d" for "yesterday"
+            - "-7d" for "one week ago"
+            - "+2m" for "in 2 months"
+            - Default to "0d" (today) if no time is specified.
 
         - If no cost is found, default to 5.00.
         - If no currency is found, default to "USD".
@@ -30,17 +35,17 @@ def parse_expenses(user_input: str) -> List[Expense]:
 
         **Examples:**
 
-        **Input:** "I spent 10 dollars on lunch and 5 euros on coffee."
+        **Input:** "I spent 10 dollars on lunch yesterday and 5 euros on coffee today."
         **Output:**
         [
-            {{"description": "Lunch", "cost": 10.0, "currency": "usd"}},
-            {{"description": "Coffee", "cost": 5.0, "currency": "eur"}}
+            {{"description": "Lunch", "cost": 10.0, "currency": "usd", "time_offset": "-1d"}},
+            {{"description": "Coffee", "cost": 5.0, "currency": "eur", "time_offset": "0d"}}
         ]
 
-        **Input:** "Bought groceries for 30 EUR."
+        **Input:** "I will pay 100 GBP for rent in 2 months."
         **Output:**
         [
-            {{"description": "Groceries", "cost": 30.0, "currency": "eur"}}
+            {{"description": "Rent", "cost": 100.0, "currency": "gbp", "time_offset": "+2m"}}
         ]
         """
 
