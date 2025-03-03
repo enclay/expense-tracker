@@ -1,61 +1,58 @@
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-from telegram.constants import ParseMode
+from bot.database.operations import sql_add_expenses
+from bot.llm.expense_parser import parse_expenses
 
-from bot.expense_parser import parse_expenses
-from bot.database.operations import sql_add_expense
-from bot.constants import ChatState
 
 async def add_handle(update: Update, context: CallbackContext):
-    """Handle adding a new expense."""
-    context.user_data["chat_state"] = ChatState.EXPENSE_INPUT
-    await update.message.reply_text("Please enter your expense.")
-
-async def process_expense(update: Update, context: CallbackContext):
-    """Process the expense and save to persistent storage"""
+    """Handles new expenses"""
     user_id = update.effective_user.id
-    expense_text = update.message.text
+    message_text = update.message.text
 
-    expense_data = parse_expenses(expense_text)
-    context.user_data["pending_expense"] = expense_data
+    expenses = parse_expenses(message_text)
+
+    if not expenses:
+        await update.message.reply_text("No valid expenses found.")
+        return
+
+    context.user_data["pending_expenses"] = expenses
+
+    confirmation_text = "Please confirm your expenses:\n\n"
+    for i, expense in enumerate(expenses, 1):
+        formatted_date = datetime.utcfromtimestamp(expense.date).strftime("%d/%m/%Y, %H:%M")
+        confirmation_text += f"*{i}.* {expense.expense} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_date})\n"
 
     keyboard = [
-        [
-            InlineKeyboardButton("\u2705 Confirm", callback_data="add_confirm"),
-            InlineKeyboardButton("\u274C Cancel", callback_data="add_cancel")
-        ]
+        [InlineKeyboardButton("\u2705 Confirm", callback_data="confirm_expense")],
+        [InlineKeyboardButton("\u274C Cancel", callback_data="cancel_expense")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-            f"Parsed expense:\n\n*{expense_data.expense}* - {expense_data.cost:.2f} {expense_data.currency}\nDo you want to confirm?",
-        reply_markup=reply_markup,
-        parse_mode=ParseMode.MARKDOWN
+        confirmation_text, reply_markup=reply_markup, parse_mode="Markdown"
     )
-
 
 async def add_confirm_callback(update: Update, context: CallbackContext):
     """Callback: Save the pending expense after user confirms."""
     query = update.callback_query
-
     await query.answer()
-    pending = context.user_data.get("pending_expense")
-    if not pending:
-        await query.edit_message_text("No pending expense found.")
+
+    pending_expenses = context.user_data.get("pending_expenses")
+    if not pending_expenses:
+        await query.edit_message_text("No pending expenses found.")
         return
+    
     user_id = update.effective_user.id
-    sql_add_expense(user_id, pending.expense, pending.cost, pending.currency)
-
-    context.user_data.pop("pending_expense", None)
-    context.user_data.pop("chat_state", None)
-    await query.edit_message_text("Expense added successfully.")
-
+    sql_add_expenses(user_id, pending_expenses)
+    
+    context.user_data.pop("pending_expenses", None)
+    await query.edit_message_text(f"{len(pending_expenses)} expense(s) added successfully!")
 
 async def add_cancel_callback(update: Update, context: CallbackContext):
-    """Callback: Cancel the pending expense addition."""
+    """Callback: Cancel adding the pending expense."""
     query = update.callback_query
-
     await query.answer()
-    context.user_data.pop("pending_expense", None)
-    context.user_data.pop("chat_state", None)
+
+    context.user_data.pop("pending_expenses", None)
     await query.edit_message_text("Expense entry cancelled.")

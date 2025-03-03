@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 from bot.handlers.start import start_handle
 from bot.handlers.message import message_input_handle
-from bot.handlers.add import add_handle, add_confirm_callback, add_cancel_callback
+from bot.handlers.add import add_confirm_callback, add_cancel_callback
 from bot.handlers.list import list_handle, list_expense_callback
 from bot.handlers.delete import delete_handle, delete_expense_callback, delete_cancel_callback
 from bot.handlers.data import export_handle, import_handle
@@ -24,7 +24,6 @@ async def set_commands(application: Application):
     """Set the bot commands."""
     commands = [
         ("start", "Start the bot"),
-        ("add", "Add an expense"),
         ("list", "List all expenses"),
         ("delete", "Delete an expense"),
         ("export", "Export expenses as json"),
@@ -38,9 +37,8 @@ def main():
     app.add_handler(CommandHandler("start", start_handle))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_input_handle))
 
-    app.add_handler(CommandHandler("add", add_handle))
-    app.add_handler(CallbackQueryHandler(add_confirm_callback, pattern=r"^add_confirm"))
-    app.add_handler(CallbackQueryHandler(add_cancel_callback, pattern=r"^add_cancel"))
+    app.add_handler(CallbackQueryHandler(add_confirm_callback, pattern=r"^confirm_expense"))
+    app.add_handler(CallbackQueryHandler(add_cancel_callback, pattern=r"^cancel_expense"))
 
     app.add_handler(CommandHandler("list", list_handle))
     app.add_handler(CallbackQueryHandler(list_expense_callback, pattern=r"^list:"))

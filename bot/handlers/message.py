@@ -1,14 +1,17 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
-from bot.handlers.add import process_expense
-from bot.constants import ChatState
+from bot.handlers.add import add_handle 
+from bot.llm.intent import parse_intent
+from bot.llm.expense_parser import parse_expenses
+from bot.database.operations import sql_add_expenses
 
 async def message_input_handle(update: Update, context: CallbackContext):
     """Handle processing general messages such as new expense entry."""
-    chat_state = context.user_data.get("chat_state", None)
+
+    user_id = update.effective_user.id
+    message_text = update.message.text
     
-    if chat_state == ChatState.EXPENSE_INPUT:
-        await process_expense(update, context)
-    else:
-        await update.message.reply_text("Unknown command. Please use */start* to see available commands.", parse_mode=ParseMode.MARKDOWN)
+    intent = parse_intent(message_text)
+    if intent.type == "add":
+        await add_handle(update, context)
