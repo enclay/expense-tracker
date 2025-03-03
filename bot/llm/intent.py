@@ -61,4 +61,4 @@ def parse_intent(user_input: str) -> IntentData:
 
     except Exception as e:
         logger.error(f"OpenAI API Error: {e}")
-        return IntentData(type="unknown")  # Default fallback
+        return IntentData(type="unknown")

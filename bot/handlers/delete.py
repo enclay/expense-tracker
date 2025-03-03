@@ -1,48 +1,69 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-from bot.database.operations import sql_list_expenses, sql_delete_expense
+from bot.database.operations import sql_list_expenses, sql_delete_expenses
+from bot.llm.deletion_parser import parse_deletion
 
 from datetime import datetime
 import logging 
 
 logger = logging.getLogger(__name__)
 
-async def delete_handle(update: Update, context: CallbackContext):
-    """Display all expenses for the current month as separate inline buttons for deletion."""
+async def delete_handle(update: Update, context: CallbackContext, span: str):
+    """Handle deleting expenses."""
     user_id = update.effective_user.id
-    current_month = datetime.now().strftime("%Y-%m")
-    expenses = sql_list_expenses(user_id, current_month)
-    
-    if not expenses:
-        await update.message.reply_text("No expenses found for the current month.")
+    message_text = update.message.text
+
+    expenses = sql_list_expenses(user_id, span if span != "all" else None)
+    expenses_to_delete = parse_deletion(expenses, message_text)
+    context.user_data["pending_deletion"] = expenses_to_delete
+
+    if not expenses_to_delete:
+        await update.message.reply_text("No matching expenses found for deletion.")
         return
 
-    keyboard = []
-    for exp in expenses:
-        button_text = f"{exp.description} - ${exp.cost}"
-        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"delete:{exp.id}")])
+    confirmation_text = "**Please confirm the deletion of these expenses:**\n\n"
+    for i, expense in enumerate(expenses_to_delete, 1):
+        formatted_time = datetime.fromtimestamp(int(expense.time)).strftime("%d/%m/%Y, %H:%M")
+        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_time})\n"
 
-    keyboard.append([InlineKeyboardButton("Cancel", callback_data="delete_cancel")])
-    
+    keyboard = [
+        [InlineKeyboardButton("\u2705 Confirm", callback_data="confirm_deletion")],
+        [InlineKeyboardButton("\u274C Cancel", callback_data="cancel_deletion")],
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Select an expense to delete:", reply_markup=reply_markup)
+
+    await update.message.reply_text(
+        confirmation_text, reply_markup=reply_markup, parse_mode="Markdown"
+    )
+
+async def delete_confirm_callback(update: Update, context: CallbackContext):
+    """Callback: Delete the pending expenses after user confirms."""
+    query = update.callback_query
+    await query.answer()
+
+    pending_deletion = context.user_data.get("pending_deletion")
+    if not pending_deletion:
+        await query.edit_message_text("No pending expenses found for deletion.")
+        return
+
+    user_id = update.effective_user.id
+
+    # Extract IDs from the pending deletion list
+    expense_ids = [expense.id for expense in pending_deletion]
+
+    # Perform batch deletion
+    sql_delete_expenses(user_id, expense_ids)
+
+    # Remove pending deletion from user data
+    context.user_data.pop("pending_deletion", None)
+
+    await query.edit_message_text(f"{len(expense_ids)} expense(s) successfully deleted!")
+
 
 async def delete_cancel_callback(update: Update, context: CallbackContext):
-    """ Delete the message and inform the user that the deletion is cancelled."""
+    """Callback: Cancel deleting the pending expenses."""
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("Deletion is cancelled by user.")
 
-async def delete_expense_callback(update: Update, context: CallbackContext):
-    """Handle the deletion when a user clicks an inline button."""
-    query = update.callback_query
-    await query.answer()
-    
-    try:
-        _, expense_id_str = query.data.split(":")
-        expense_id = int(expense_id_str)
-        sql_delete_expense(expense_id)
-        await query.edit_message_text("Expense deleted successfully.")
-    except Exception as e:
-        logger.error(f"Error deleting expense: {e}")
-        await query.edit_message_text("Failed to delete expense. Please try again.")
+    context.user_data.pop("pending_deletion", None)
+    await query.edit_message_text("Expense deletion cancelled.")

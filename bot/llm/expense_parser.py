@@ -61,6 +61,7 @@ def parse_expenses(user_input: str) -> List[Expense]:
         )
 
         gpt_output = response.choices[0].message.content.strip()
+        print(gpt_output)
 
         try:
             data = json.loads(gpt_output)

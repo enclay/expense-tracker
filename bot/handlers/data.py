@@ -69,7 +69,6 @@ async def export_handle(update: Update, context: CallbackContext):
             "time": exp.time
         })
 
-    # Convert JSON to BytesIO object (in memory)
     json_data = json.dumps(expense_data, indent=4)
     json_file = BytesIO(json_data.encode("utf-8"))
     json_file.name = "expenses.json"

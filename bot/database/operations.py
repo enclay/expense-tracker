@@ -70,12 +70,23 @@ def sql_list_expenses(user_id: int, month: str = None) -> List[ExpenseWithId]:
         return []
 
 
-def sql_delete_expense(expense_id: int):
-    """Delete an expense by its ID."""
+def sql_delete_expenses(user_id: int, expense_ids: List[int]):
+    """Delete multiple expenses by their IDs for a specific user."""
+    if not expense_ids:
+        logger.warning(f"No expenses provided for deletion for user {user_id}.")
+        return
+
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM Expense WHERE id = ?", (expense_id,))
+
+            placeholders = ", ".join("?" for _ in expense_ids)
+            query = f"DELETE FROM Expense WHERE user_id = ? AND id IN ({placeholders})"
+
+            cursor.execute(query, (user_id, *expense_ids))
             conn.commit()
+
+            logger.info(f"Deleted {cursor.rowcount} expenses for user {user_id}.")
+
     except sqlite3.Error as e:
-        logger.error(f"Error deleting expense: {e}")
+        logger.error(f"Error deleting expenses for user {user_id}: {e}")

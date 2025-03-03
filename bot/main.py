@@ -10,7 +10,7 @@ from bot.handlers.start import start_handle
 from bot.handlers.message import message_input_handle
 from bot.handlers.add import add_confirm_callback, add_cancel_callback
 from bot.handlers.list import list_handle, list_expense_callback
-from bot.handlers.delete import delete_handle, delete_expense_callback, delete_cancel_callback
+from bot.handlers.delete import delete_confirm_callback, delete_cancel_callback
 from bot.handlers.data import export_handle, import_handle
 from bot.utils.config import TELEGRAM_BOT_TOKEN
 
@@ -25,7 +25,6 @@ async def set_commands(application: Application):
     commands = [
         ("start", "Start the bot"),
         ("list", "List all expenses"),
-        ("delete", "Delete an expense"),
         ("export", "Export expenses as json"),
     ]
     await application.bot.set_my_commands(commands)
@@ -43,9 +42,8 @@ def main():
     app.add_handler(CommandHandler("list", list_handle))
     app.add_handler(CallbackQueryHandler(list_expense_callback, pattern=r"^list:"))
 
-    app.add_handler(CommandHandler("delete", delete_handle))
-    app.add_handler(CallbackQueryHandler(delete_expense_callback, pattern=r"^delete:"))
-    app.add_handler(CallbackQueryHandler(delete_cancel_callback, pattern=r"^delete_cancel"))
+    app.add_handler(CallbackQueryHandler(delete_confirm_callback, pattern=r"^confirm_deletion"))
+    app.add_handler(CallbackQueryHandler(delete_cancel_callback, pattern=r"^cancel_deletion"))
 
     app.add_handler(CommandHandler("export", export_handle))
     app.add_handler(MessageHandler(filters.Document.MimeType("application/json"), import_handle))
