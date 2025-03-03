@@ -1,28 +1,10 @@
 import logging
 import sqlite3
-from typing import List, Tuple
+from typing import List
 from bot.utils.config import DB_PATH
-from bot.llm.expense_parser import Expense
+from bot.database.models import ExpenseWithId, Expense
 
 logger = logging.getLogger(__name__)
-
-def sql_add_expense(user_id: int, description: str, cost: float, currency: str, time: int = None):
-    """Add an expense to the database."""
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            if time:
-                cursor.execute(
-                    "INSERT INTO Expense (user_id, description, cost, currency, time) VALUES (?, ?, ?, ?, ?)",
-                    (user_id, description, cost, currency, time)
-                )
-            else:
-                cursor.execute(
-                    "INSERT INTO Expense (user_id, description, cost, currency, time) VALUES (?, ?, ?, ?, strftime('%s', 'now'))",
-                    (user_id, description, cost, currency)
-                )
-    except sqlite3.Error as e:
-        logger.error(f"Error adding expense: {e}")
 
 def sql_add_expenses(user_id: int, expenses: List[Expense]):
     """Add multiple expenses to the database in a single transaction."""
@@ -31,7 +13,7 @@ def sql_add_expenses(user_id: int, expenses: List[Expense]):
             cursor = conn.cursor()
 
             expense_data = [
-                (user_id, exp.description, exp.cost, exp.currency, exp.date)
+                (user_id, exp.description, exp.cost, exp.currency, exp.time)
                 for exp in expenses
             ]
 
@@ -48,7 +30,7 @@ def sql_add_expenses(user_id: int, expenses: List[Expense]):
     except sqlite3.Error as e:
         logger.error(f"Error adding batch expenses: {e}")
 
-def sql_list_expenses(user_id: int, month: str = None) -> List[Tuple]:
+def sql_list_expenses(user_id: int, month: str = None) -> List[ExpenseWithId]:
     """Fetch all expenses for a user."""
     try:
         with sqlite3.connect(DB_PATH) as conn:
@@ -67,14 +49,22 @@ def sql_list_expenses(user_id: int, month: str = None) -> List[Tuple]:
             else:
                 cursor.execute(
                     """
-                    SELECT id, description, cost, currency, time 
-                    FROM Expense 
+                    SELECT id, description, cost, currency, time
+                    FROM Expense
                     WHERE user_id = ?
                     ORDER BY time DESC
                     """,
                     (user_id,)
                 )
-            return cursor.fetchall()
+            return [
+                ExpenseWithId(
+                    id=row[0],
+                    description=row[1],
+                    cost=row[2],
+                    currency=row[3],
+                    time=row[4]
+                ) for row in cursor.fetchall()
+            ]
     except sqlite3.Error as e:
         logger.error(f"Error listing expenses: {e}")
         return []

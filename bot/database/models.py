@@ -10,7 +10,7 @@ class Expense:
     description: str
     cost: float
     currency: str
-    date: int
+    time: int
 
     @staticmethod
     def from_json(data: dict):
@@ -19,7 +19,7 @@ class Expense:
             description=data.get("description", "unknown expense"),
             cost=float(data.get("cost", 5.00)),
             currency=data.get("currency", "usd").lower(),
-            date=int(datetime.now().timestamp())
+            time=int(datetime.now().timestamp())
         )
 
 @dataclass
@@ -35,5 +35,5 @@ class ExpenseWithId(Expense):
             description=data.get("description", "unknown expense"),
             cost=float(data.get("cost", 5.00)),
             currency=data.get("currency", "usd").lower(),
-            date=int(datetime.now().timestamp())
+            time=int(datetime.now().timestamp())
         )

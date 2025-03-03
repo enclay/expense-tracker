@@ -19,7 +19,7 @@ class IntentData:
             return IntentData(type=data["type"], span=data.get("span"))
         except (json.JSONDecodeError, KeyError) as e:
             logger.error(f"Failed to parse intent JSON: {e}")
-            return IntentData(type="unknown")  # Default case for robustness
+            return IntentData(type="unknown")
 
 def parse_intent(user_input: str) -> IntentData:
     """Determines the user's intent (list, add, delete) and time span (all or month)."""

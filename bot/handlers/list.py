@@ -29,8 +29,7 @@ async def refresh_list(update: Update, context: CallbackContext, month: str):
     else:
         message_text = f"*Expenses for {month_title}:*\n"
         for exp in expenses:
-            expense_id, description, cost, currency, timestamp = exp
-            message_text += f"- {description} - {cost} {currency}\n"
+            message_text += f"- {exp.description} - {exp.cost} {exp.currency}\n"
 
     keyboard = [
         [

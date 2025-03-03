@@ -20,8 +20,8 @@ async def add_handle(update: Update, context: CallbackContext):
 
     confirmation_text = "Please confirm your expenses:\n\n"
     for i, expense in enumerate(expenses, 1):
-        formatted_date = datetime.utcfromtimestamp(expense.date).strftime("%d/%m/%Y, %H:%M")
-        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_date})\n"
+        formatted_time = datetime.utcfromtimestamp(expense.time).strftime("%d/%m/%Y, %H:%M")
+        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_time})\n"
 
     keyboard = [
         [InlineKeyboardButton("\u2705 Confirm", callback_data="confirm_expense")],

@@ -3,7 +3,8 @@ from datetime import datetime
 from io import BytesIO
 from telegram import Update, InputFile
 from telegram.ext import CallbackContext
-from bot.database.operations import sql_add_expense, sql_list_expenses
+from bot.database.operations import sql_list_expenses, sql_add_expenses
+from bot.database.models import Expense
 
 async def import_handle(update: Update, context: CallbackContext):
     """Import user's spendings from a JSON file."""
@@ -25,22 +26,24 @@ async def import_handle(update: Update, context: CallbackContext):
         if not isinstance(data, list):
             raise ValueError("Invalid JSON format. The root element must be a list.")
 
-        count = 0
+        expenses = []
         for entry in data:
             if all(key in entry for key in ["description", "cost", "currency", "time"]):
-                sql_add_expense(
-                    user_id,
-                    entry["description"],
-                    float(entry["cost"]),
-                    entry["currency"],
-                    int(entry["time"]),
-                )
-                count += 1
+                expenses.append(Expense(
+                    description=entry["description"],
+                    cost=float(entry["cost"]),
+                    currency=entry["currency"],
+                    time=int(entry["time"])
+                ))
             else:
                 await update.message.reply_text("Invalid JSON format. Some entries are missing required fields.")
                 return
 
-        await update.message.reply_text(f"Successfully imported {count} expenses!")
+        if expenses:
+            sql_add_expenses(user_id, expenses)
+            await update.message.reply_text(f"Successfully imported {len(expenses)} expenses!")
+        else:
+            await update.message.reply_text("No valid expenses found in the JSON file.")
 
     except json.JSONDecodeError:
         await update.message.reply_text("Invalid JSON format. Please ensure the file contains valid JSON.")
@@ -59,12 +62,11 @@ async def export_handle(update: Update, context: CallbackContext):
 
     expense_data = []
     for exp in expenses:
-        expense_id, description, cost, currency, timestamp = exp
         expense_data.append({
-            "description": description,
-            "cost": cost,
-            "currency": currency,
-            "time": timestamp
+            "description": exp.description,
+            "cost": exp.cost,
+            "currency": exp.currency,
+            "time": exp.time
         })
 
     # Convert JSON to BytesIO object (in memory)

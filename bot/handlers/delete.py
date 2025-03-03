@@ -19,9 +19,8 @@ async def delete_handle(update: Update, context: CallbackContext):
 
     keyboard = []
     for exp in expenses:
-        expense_id, description, cost, currency, timestamp = exp
-        button_text = f"{description} - ${cost}"
-        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"delete:{expense_id}")])
+        button_text = f"{exp.description} - ${exp.cost}"
+        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"delete:{exp.id}")])
 
     keyboard.append([InlineKeyboardButton("Cancel", callback_data="delete_cancel")])
     
