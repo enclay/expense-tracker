@@ -27,10 +27,10 @@ async def import_handle(update: Update, context: CallbackContext):
 
         count = 0
         for entry in data:
-            if all(key in entry for key in ["expense", "cost", "currency", "time"]):
+            if all(key in entry for key in ["description", "cost", "currency", "time"]):
                 sql_add_expense(
                     user_id,
-                    entry["expense"],
+                    entry["description"],
                     float(entry["cost"]),
                     entry["currency"],
                     int(entry["time"]),
@@ -59,9 +59,9 @@ async def export_handle(update: Update, context: CallbackContext):
 
     expense_data = []
     for exp in expenses:
-        expense_id, expense, cost, currency, timestamp = exp
+        expense_id, description, cost, currency, timestamp = exp
         expense_data.append({
-            "expense": expense,
+            "description": description,
             "cost": cost,
             "currency": currency,
             "time": timestamp
