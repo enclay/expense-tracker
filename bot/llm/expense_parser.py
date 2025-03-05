@@ -57,7 +57,7 @@ def parse_expenses(user_input: str) -> List[Expense]:
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
-            max_tokens=100,
+            max_tokens=500,
         )
 
         gpt_output = response.choices[0].message.content.strip()

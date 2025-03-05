@@ -48,13 +48,10 @@ async def delete_confirm_callback(update: Update, context: CallbackContext):
 
     user_id = update.effective_user.id
 
-    # Extract IDs from the pending deletion list
     expense_ids = [expense.id for expense in pending_deletion]
 
-    # Perform batch deletion
     sql_delete_expenses(user_id, expense_ids)
 
-    # Remove pending deletion from user data
     context.user_data.pop("pending_deletion", None)
 
     await query.edit_message_text(f"{len(expense_ids)} expense(s) successfully deleted!")

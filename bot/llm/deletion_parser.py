@@ -58,7 +58,7 @@ def parse_deletion(expenses: list[ExpenseWithId], user_input: str) -> list[Expen
                 return [exp for exp in expenses if exp.id in data]
             else:
                 logger.error(f"Unexpected response format: {gpt_output}")
-                return []  # Fallback to empty list
+                return []
         except json.JSONDecodeError:
             logger.error(f"Failed to parse JSON: {gpt_output}")
             return []
