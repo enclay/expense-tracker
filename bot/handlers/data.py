@@ -53,8 +53,8 @@ async def export_handle(update: Update, context: CallbackContext):
     """Export user's spendings."""
     
     user_id = update.effective_user.id
-    current_month = datetime.now().strftime("%Y-%m")
-    expenses = sql_list_expenses(user_id, current_month)
+
+    expenses = sql_list_expenses(user_id)
     
     if not expenses:
         await update.message.reply_text("No expenses found for the current month.")

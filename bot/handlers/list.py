@@ -14,16 +14,17 @@ async def list_handle(update: Update, context: CallbackContext):
     current_month = datetime.now().strftime("%Y-%m")
     await refresh_list(update, context, current_month)
 
-async def refresh_list(update: Update, context: CallbackContext, month: str):
-    """Helper function which updates this list according to month"""
+async def refresh_list(update: Update, context: CallbackContext, period: str):
+    """Helper function which updates the expense list according to the given month and year."""
     user_id = update.effective_user.id
 
-    expenses = sql_list_expenses(user_id, month)
+    expenses = sql_list_expenses(user_id, period)
+
     try:
-        dt = datetime.strptime(month, "%Y-%m")
+        dt = datetime.strptime(period, "%Y-%m")
         month_title = dt.strftime("%B %Y")
     except Exception:
-        month_title = month
+        month_title = period
 
     if not expenses:
         message_text = f"No expenses found for {month_title}."
@@ -34,8 +35,8 @@ async def refresh_list(update: Update, context: CallbackContext, month: str):
 
     keyboard = [
         [
-            InlineKeyboardButton("← Previous", callback_data=f"list:prev:{month}"),
-            InlineKeyboardButton("Next →", callback_data=f"list:next:{month}")
+            InlineKeyboardButton("← Previous", callback_data=f"list:prev:{period}"),
+            InlineKeyboardButton("Next →", callback_data=f"list:next:{period}")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)

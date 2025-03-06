@@ -30,22 +30,45 @@ def sql_add_expenses(user_id: int, expenses: List[Expense]):
     except sqlite3.Error as e:
         logger.error(f"Error adding batch expenses: {e}")
 
-def sql_list_expenses(user_id: int, month: str = None) -> List[ExpenseWithId]:
-    """Fetch all expenses for a user."""
+
+def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
+    """
+    Fetch all expenses for a user.
+
+    - If `period` is `YYYY-MM`, filters by month.
+    - If `period` is `YYYY`, filters by year.
+    - If `period` is None, fetches all expenses.
+    """
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
-            if month:
-                cursor.execute(
-                    """
-                    SELECT id, description, cost, currency, time 
-                    FROM Expense 
-                    WHERE user_id = ? 
-                      AND strftime('%Y-%m', datetime(time, 'unixepoch')) = ?
-                    ORDER BY time DESC
-                    """,
-                    (user_id, month)
-                )
+
+            if period:
+                if len(period) == 7:  # Format YYYY-MM (month-based filter)
+                    cursor.execute(
+                        """
+                        SELECT id, description, cost, currency, time 
+                        FROM Expense 
+                        WHERE user_id = ? 
+                          AND strftime('%Y-%m', datetime(time, 'unixepoch')) = ?
+                        ORDER BY time DESC
+                        """,
+                        (user_id, period)
+                    )
+                elif len(period) == 4:  # Format YYYY (year-based filter)
+                    cursor.execute(
+                        """
+                        SELECT id, description, cost, currency, time 
+                        FROM Expense 
+                        WHERE user_id = ? 
+                          AND strftime('%Y', datetime(time, 'unixepoch')) = ?
+                        ORDER BY time DESC
+                        """,
+                        (user_id, period)
+                    )
+                else:
+                    logger.warning(f"Invalid period format: {period}")
+                    return []
             else:
                 cursor.execute(
                     """
@@ -56,6 +79,7 @@ def sql_list_expenses(user_id: int, month: str = None) -> List[ExpenseWithId]:
                     """,
                     (user_id,)
                 )
+
             return [
                 ExpenseWithId(
                     id=row[0],
@@ -65,6 +89,7 @@ def sql_list_expenses(user_id: int, month: str = None) -> List[ExpenseWithId]:
                     time=row[4]
                 ) for row in cursor.fetchall()
             ]
+
     except sqlite3.Error as e:
         logger.error(f"Error listing expenses: {e}")
         return []
