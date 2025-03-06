@@ -8,12 +8,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def delete_handle(update: Update, context: CallbackContext, period: str):
+async def delete_handle(update: Update, context: CallbackContext):
     """Handle deleting expenses."""
     user_id = update.effective_user.id
     message_text = update.message.text
 
-    expenses = sql_list_expenses(user_id, period if period != "all" else None)
+    expenses = sql_list_expenses(user_id)
+
     expenses_to_delete = parse_deletion(expenses, message_text)
     context.user_data["pending_deletion"] = expenses_to_delete
 

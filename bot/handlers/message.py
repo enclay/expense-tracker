@@ -10,7 +10,7 @@ async def message_input_handle(update: Update, context: CallbackContext):
     message_text = update.message.text
     
     intent = parse_intent(message_text)
-    if intent.type == "add":
+    if intent == "add":
         await add_handle(update, context)
-    elif intent.type == "delete":
-        await delete_handle(update, context, intent.period)
+    elif intent == "delete":
+        await delete_handle(update, context)

@@ -26,10 +26,11 @@ async def refresh_list(update: Update, context: CallbackContext, period: str):
     except Exception:
         month_title = period
 
+    message_text = f"*Expenses for {month_title}:*\n"
+
     if not expenses:
-        message_text = f"No expenses found for {month_title}."
+        message_text += "\n\U0000274C *No expenses found.*"
     else:
-        message_text = f"*Expenses for {month_title}:*\n"
         for exp in expenses:
             message_text += f"- {exp.description} - {exp.cost}{get_currency_symbol(exp.currency)}\n"
 

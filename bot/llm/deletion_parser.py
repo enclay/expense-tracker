@@ -1,10 +1,16 @@
 import json
 import logging
 from openai import OpenAI
+from datetime import datetime
 from bot.utils.config import OPENAI_API_KEY
 from bot.database.models import ExpenseWithId
 
 logger = logging.getLogger(__name__)
+
+def _convert_timestamp_to_str(ts: int):
+    """Converts Unix timestamp to human-readable string."""
+    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+
 
 def parse_deletion(expenses: list[ExpenseWithId], user_input: str) -> list[ExpenseWithId]:
     """
@@ -15,14 +21,20 @@ def parse_deletion(expenses: list[ExpenseWithId], user_input: str) -> list[Expen
         client = OpenAI(api_key=OPENAI_API_KEY)
 
         expenses_json = [
-            {"id": exp.id, "description": exp.description, "cost": exp.cost, "currency": exp.currency, "time": exp.time}
+            {
+                "id": exp.id,
+                "description": exp.description,
+                "cost": exp.cost,
+                "currency": exp.currency,
+                "time": _convert_timestamp_to_str(exp.time)
+            }
             for exp in expenses
         ]
 
         prompt = f"""
         You are an expense tracking assistant. The user wants to delete certain expenses.
         
-        Given this user request:
+        Given this user request/requireement to be matched:
         "{user_input}"
 
         And the following expenses:
@@ -47,7 +59,7 @@ def parse_deletion(expenses: list[ExpenseWithId], user_input: str) -> list[Expen
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
-            max_tokens=100,
+            max_tokens=1000,
         )
 
         gpt_output = response.choices[0].message.content.strip()
