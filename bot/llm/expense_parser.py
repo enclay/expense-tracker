@@ -15,7 +15,7 @@ def parse_expenses(user_input: str) -> List[Expense]:
         client = OpenAI(api_key=OPENAI_API_KEY)
 
         prompt = f"""
-        Extract one or more expenses from the following message:
+        Detect the language of the following message and extract one or more expenses while keeping the original language for descriptions:
         "{user_input}"
 
         - Each expense should have:
