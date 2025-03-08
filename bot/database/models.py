@@ -33,7 +33,7 @@ def _convert_time_offset(offset: str) -> int:
         return int(target_date.timestamp())
 
     except Exception as e:
-        logger.error(f"Error in convert_time_offset: {e}")
+        logger.error(f"Time offset conversion failed: {e}")
         return int(now.timestamp())
 
 @dataclass

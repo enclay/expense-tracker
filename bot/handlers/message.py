@@ -15,9 +15,9 @@ async def message_input_handle(update: Update, context: CallbackContext):
     elif intent == "delete":
         await delete_handle(update, context)
     else:
-        await unknown_command_handle(update, context)
+        await unknown_handle(update, context)
 
-async def unknown_command_handle(update: Update, callback: CallbackContext):
+async def unknown_handle(update: Update, callback: CallbackContext):
     """Handle processing unknown commands."""
 
     message = (

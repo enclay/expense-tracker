@@ -5,7 +5,6 @@ from telegram.ext import CallbackContext
 from bot.database.operations import sql_list_expenses, sql_delete_expenses
 from bot.llm.deletion_parser import filter_expenses_for_delete
 
-
 logger = logging.getLogger(__name__)
 
 async def delete_handle(update: Update, context: CallbackContext):

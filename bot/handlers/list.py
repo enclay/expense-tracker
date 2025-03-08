@@ -76,8 +76,6 @@ async def list_expense_callback(update: Update, context: CallbackContext):
             new_dt = _add_months(dt, -1)
         elif direction == "next":
             new_dt = _add_months(dt, 1)
-        else:
-            new_dt = dt
         new_month = new_dt.strftime("%Y-%m")
 
     except Exception as e:
