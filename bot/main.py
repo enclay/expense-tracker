@@ -23,7 +23,7 @@ logging.basicConfig(
 async def set_commands(app: Application):
     """Set the bot commands."""
     commands = [
-        ("list", "List all expenses"),
+        ("list", "List expenses"),
         ("export", "Export data"),
     ]
     await app.bot.set_my_commands(commands)
@@ -34,8 +34,8 @@ def main():
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).post_init(set_commands).build()
 
     app.add_handler(MessageHandler(MessageFilters.RAW_TEXT, message_input_handle))
+    app.add_handler(MessageHandler(MessageFilters.PHOTO, import_image_handle))
     app.add_handler(MessageHandler(MessageFilters.JSON, import_handle))
-    app.add_handler(MessageHandler(MessageFilters.JPG, import_image_handle))
 
     app.add_handler(CallbackQueryHandler(add_confirm_callback, pattern=r"^confirm_expense"))
     app.add_handler(CallbackQueryHandler(add_cancel_callback, pattern=r"^cancel_expense"))

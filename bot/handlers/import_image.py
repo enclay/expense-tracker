@@ -1,13 +1,11 @@
 import logging
-from datetime import datetime
+import base64
 from io import BytesIO
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-import base64
-from openai import OpenAI
-from bot.utils.config import OPENAI_API_KEY
+from telegram.constants import ChatAction
 from bot.llm.photo_parser import parse_expenses_from_photo
-
 
 logger = logging.getLogger(__name__)
 
@@ -19,19 +17,19 @@ async def import_image_handle(update: Update, context: CallbackContext) -> None:
     """Import expenses via image"""
     message = update.message
 
-    if update.message.photo:
+    if message.photo:
         file_id = message.photo[-1].file_id
-    elif update.message.document and update.message.document.mime_type.startswith("image/"):
+    elif message.document and message.document.mime_type.startswith("image/"):
         file_id = message.document.file_id
     else:
-        await update.message.reply_text("Please send a valid image.")
+        await message.reply_text("Please send a valid image.")
         return
 
+    await message.chat.send_action(ChatAction.TYPING)
+
     file = await context.bot.get_file(file_id)
-    logger.info(f"Image downloading started: {file.file_path}")
-    downloaded = await file.download_as_bytearray()
-    image_bytes =  BytesIO(downloaded)
-    logger.info(f"Image downloaded: {file.file_path}")
+    data = await file.download_as_bytearray()
+    image_bytes = BytesIO(data)
 
     await file.download_to_memory(image_bytes)
     image_bytes.seek(0)
@@ -51,6 +49,6 @@ async def import_image_handle(update: Update, context: CallbackContext) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    await message.reply_text(
         confirmation_text, reply_markup=reply_markup, parse_mode="Markdown"
-        )
+    )
