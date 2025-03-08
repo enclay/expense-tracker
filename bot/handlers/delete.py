@@ -1,10 +1,10 @@
+import logging 
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_list_expenses, sql_delete_expenses
-from bot.llm.deletion_parser import parse_deletion
+from bot.llm.deletion_parser import filter_expenses_for_delete
 
-from datetime import datetime
-import logging 
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ async def delete_handle(update: Update, context: CallbackContext):
 
     expenses = sql_list_expenses(user_id)
 
-    expenses_to_delete = parse_deletion(expenses, message_text)
+    expenses_to_delete = filter_expenses_for_delete(expenses, message_text)
     context.user_data["pending_deletion"] = expenses_to_delete
 
     if not expenses_to_delete:
@@ -38,7 +38,7 @@ async def delete_handle(update: Update, context: CallbackContext):
     )
 
 async def delete_confirm_callback(update: Update, context: CallbackContext):
-    """Callback: Delete the pending expenses after user confirms."""
+    """Callback deleting pending expenses after confirmation."""
     query = update.callback_query
     await query.answer()
 
@@ -59,7 +59,7 @@ async def delete_confirm_callback(update: Update, context: CallbackContext):
 
 
 async def delete_cancel_callback(update: Update, context: CallbackContext):
-    """Callback: Cancel deleting the pending expenses."""
+    """Callback canceling the pending expenses deletion."""
     query = update.callback_query
     await query.answer()
 

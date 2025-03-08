@@ -7,7 +7,7 @@ from bot.database.models import ExpenseWithId, Expense
 logger = logging.getLogger(__name__)
 
 def sql_add_expenses(user_id: int, expenses: List[Expense]):
-    """Add multiple expenses to the database in a single transaction."""
+    """Add multiple expenses to the database with a single transaction."""
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
@@ -87,7 +87,8 @@ def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
                     cost=row[2],
                     currency=row[3],
                     time=row[4]
-                ) for row in cursor.fetchall()
+                )
+                for row in cursor.fetchall()
             ]
 
     except sqlite3.Error as e:

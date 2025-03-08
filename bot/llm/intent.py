@@ -1,14 +1,12 @@
 import json
 import logging
-from datetime import datetime 
 from openai import OpenAI
-from dataclasses import dataclass
 from bot.utils.config import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
 def parse_intent(user_input: str) -> str:
-    """Determines the user's intent (list, add, delete)"""
+    """Determine the user's intent (list, add, delete)"""
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
 

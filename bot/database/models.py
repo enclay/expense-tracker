@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-
 def _convert_time_offset(offset: str) -> int:
     """Convert relative time offset (-1d, +2m, etc.) to Unix timestamp."""
     now = datetime.now()
@@ -39,7 +38,7 @@ def _convert_time_offset(offset: str) -> int:
 
 @dataclass
 class Expense:
-    """Represents an expense without id (for inserting new expenses)."""
+    """Represents an expense without id."""
     description: str
     cost: float
     currency: str
@@ -47,7 +46,7 @@ class Expense:
 
     @staticmethod
     def from_json(data: dict):
-        """Parses Expense object from JSON."""
+        """Parse Expense object from JSON."""
         
         return Expense(
             description=data.get("description", "unknown expense"),
@@ -58,7 +57,7 @@ class Expense:
 
 @dataclass
 class ExpenseWithId(Expense):
-    """Represents an expense with id (retrieved from the database)."""
+    """Represents an expense with id."""
     id: int
 
     @staticmethod

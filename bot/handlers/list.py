@@ -4,18 +4,17 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
 from bot.database.operations import sql_list_expenses
-from bot.utils.datetime import add_months
 from bot.utils.currency import get_currency_symbol
 
 logger = logging.getLogger(__name__)
 
 async def list_handle(update: Update, context: CallbackContext):
-    """Handle displaying expenses for the current month with pagination."""
+    """Display expenses for the current month with pagination."""
     current_month = datetime.now().strftime("%Y-%m")
-    await refresh_list(update, context, current_month)
+    await _refresh_list(update, context, current_month)
 
-async def refresh_list(update: Update, context: CallbackContext, period: str):
-    """Helper function which updates the expense list according to the given month and year."""
+async def _refresh_list(update: Update, context: CallbackContext, period: str):
+    """Refresh the expense list based on specified time period."""
     user_id = update.effective_user.id
 
     expenses = sql_list_expenses(user_id, period)
@@ -55,23 +54,34 @@ async def refresh_list(update: Update, context: CallbackContext, period: str):
             parse_mode=ParseMode.MARKDOWN
         )
 
+def _add_months(dt: datetime, months: int) -> datetime:
+    """Add or subtract months from a date."""
+    month = dt.month - 1 + months
+    year = dt.year + month // 12
+    month = month % 12 + 1
+    
+    return dt.replace(year=year, month=month, day=1)
+
 async def list_expense_callback(update: Update, context: CallbackContext):
-    """Callback function handling month navigation"""
+    """Callback function handling month navigation."""
     query = update.callback_query
-    await query.answer()
     data = query.data
+
+    await query.answer()
+
     try:
         _, direction, current_month = data.split(":")
         dt = datetime.strptime(current_month, "%Y-%m")
         if direction == "prev":
-            new_dt = add_months(dt, -1)
+            new_dt = _add_months(dt, -1)
         elif direction == "next":
-            new_dt = add_months(dt, 1)
+            new_dt = _add_months(dt, 1)
         else:
             new_dt = dt
         new_month = new_dt.strftime("%Y-%m")
+
     except Exception as e:
         logger.error(f"Error parsing callback data '{data}': {e}")
         new_month = datetime.now().strftime("%Y-%m")
 
-    await refresh_list(update, context, new_month)
+    await _refresh_list(update, context, new_month)

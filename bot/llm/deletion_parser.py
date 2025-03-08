@@ -12,7 +12,7 @@ def _convert_timestamp_to_str(ts: int):
     return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
 
 
-def parse_deletion(expenses: list[ExpenseWithId], user_input: str) -> list[ExpenseWithId]:
+def filter_expenses_for_delete(expenses: list[ExpenseWithId], user_input: str) -> list[ExpenseWithId]:
     """
     Determines which expenses should be deleted based on user input.
     Returns a list of ExpenseWithId objects.

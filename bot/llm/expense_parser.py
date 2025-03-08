@@ -2,15 +2,13 @@ import logging
 import json
 from typing import List
 from openai import OpenAI
-from datetime import datetime, timedelta
 from bot.utils.config import OPENAI_API_KEY
 from bot.database.models import Expense
 
 logger = logging.getLogger(__name__)
 
-
 def parse_expenses(user_input: str) -> List[Expense]:
-    """Parse the user input to extract multiple expenses with cost, currency, and always set the current timestamp."""
+    """Extract multiple expenses from the user input."""
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
 

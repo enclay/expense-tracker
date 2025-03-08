@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_add_expenses
@@ -6,8 +6,7 @@ from bot.llm.expense_parser import parse_expenses
 
 
 async def add_handle(update: Update, context: CallbackContext):
-    """Handles new expenses"""
-    user_id = update.effective_user.id
+    """Handle new expenses."""
     message_text = update.message.text
 
     expenses = parse_expenses(message_text)
@@ -34,7 +33,7 @@ async def add_handle(update: Update, context: CallbackContext):
     )
 
 async def add_confirm_callback(update: Update, context: CallbackContext):
-    """Callback: Save the pending expense after user confirms."""
+    """Callback saving pending expenses after user confirmation."""
     query = update.callback_query
     await query.answer()
 
@@ -50,7 +49,7 @@ async def add_confirm_callback(update: Update, context: CallbackContext):
     await query.edit_message_text(f"{len(pending_expenses)} expense(s) added successfully!")
 
 async def add_cancel_callback(update: Update, context: CallbackContext):
-    """Callback: Cancel adding the pending expense."""
+    """Callback cancelling new transactions"""
     query = update.callback_query
     await query.answer()
 
