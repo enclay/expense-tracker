@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import List
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_add_expenses
+from bot.database.models import Expense 
 from bot.llm.expense_parser import parse_expenses
 
 
@@ -11,6 +13,9 @@ async def add_handle(update: Update, context: CallbackContext):
 
     expenses = parse_expenses(message_text)
 
+    await present_expenses_for_confirmation(update, context, expenses)
+
+async def present_expenses_for_confirmation(update: Update, context: CallbackContext, expenses: List[Expense]):
     if not expenses:
         await update.message.reply_text("No valid expenses found.")
         return

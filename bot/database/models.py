@@ -45,15 +45,29 @@ class Expense:
     time: int
 
     @staticmethod
-    def from_json(data: dict):
+    def from_json(data: dict, time_offset: bool = False):
         """Parse Expense object from JSON."""
         
+        if time_offset:
+            time = _convert_time_offset(data.get("time_offset", 0))
+        else:
+            time = int(data.get("time", 0))
+
         return Expense(
             description=data.get("description", "unknown expense"),
             cost=float(data.get("cost", 5.00)),
             currency=data.get("currency", "usd").lower(),
-            time=_convert_time_offset(data.get("time_offset", 0))
+            time=time
         )
+
+    def to_json(self) -> dict:
+        """Convert Expense object to JSON-compatible dictionary."""
+        return {
+            "description": self.description,
+            "cost": self.cost,
+            "currency": self.currency,
+            "time": self.time
+        }
 
 @dataclass
 class ExpenseWithId(Expense):
@@ -61,12 +75,28 @@ class ExpenseWithId(Expense):
     id: int
 
     @staticmethod
-    def from_json(data: dict):
+    def from_json(data: dict, time_offset: bool = False):
         """Parses ExpenseWithId object from JSON."""
+
+        if time_offset:
+            time = _convert_time_offset(data.get("time_offset", 0))
+        else:
+            time = int(data.get("time", 0))
+
         return ExpenseWithId(
             id=int(data.get("id", 0)),
             description=data.get("description", "unknown expense"),
             cost=float(data.get("cost", 5.00)),
             currency=data.get("currency", "usd").lower(),
-            time=_convert_time_offset(data.get("time_offset", 0))
+            time=time
         )
+
+    def to_json(self) -> dict:
+        """Convert ExpenseWithId object to JSON-compatible dictionary."""
+        return {
+            "id": self.id,
+            "description": self.description,
+            "cost": self.cost,
+            "currency": self.currency,
+            "time": self.time
+        }

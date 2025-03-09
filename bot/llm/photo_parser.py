@@ -66,9 +66,9 @@ def parse_expenses_from_photo(base64_image: str) -> List[Expense]:
         try:
             data = json.loads(gpt_output)
             if isinstance(data, list):
-                return [Expense.from_json(exp) for exp in data]
+                return [Expense.from_json(exp, time_offset=True) for exp in data]
             else:
-                return [Expense.from_json(data)]
+                return [Expense.from_json(data, time_offset=True)]
         except json.JSONDecodeError:
             logger.error(f"Failed to parse JSON: {gpt_output}")
             return []
