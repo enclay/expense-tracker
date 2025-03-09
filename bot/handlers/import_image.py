@@ -37,6 +37,11 @@ async def import_image_handle(update: Update, context: CallbackContext) -> None:
     base64_image = await _encode_image(image_bytes)
     expenses = parse_expenses_from_photo(base64_image)
 
+    if not expenses:
+        await update.message.reply_text("No valid expenses found.")
+        return
+
+    context.user_data["pending_insertion"] = expenses
 
     confirmation_text = "Please confirm your expenses:\n\n"
     for i, expense in enumerate(expenses, 1):

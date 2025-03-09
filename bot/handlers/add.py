@@ -15,7 +15,14 @@ async def add_handle(update: Update, context: CallbackContext):
         await update.message.reply_text("No valid expenses found.")
         return
 
-    context.user_data["pending_expenses"] = expenses
+    message_id  = context.user_data.pop("insertion_message_id", None)
+    if message_id:
+        await context.bot.edit_message_text(
+            text="Adding expenses is cancelled.",
+            message_id=message_id,
+            chat_id=update.message.chat_id
+        )
+    context.user_data["pending_insertion"] = expenses
 
     confirmation_text = "Please confirm your expenses:\n\n"
     for i, expense in enumerate(expenses, 1):
@@ -28,16 +35,21 @@ async def add_handle(update: Update, context: CallbackContext):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        confirmation_text, reply_markup=reply_markup, parse_mode="Markdown"
+    message = await update.message.reply_text(
+        confirmation_text,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
     )
+    context.user_data["insertion_message_id"] = message.message_id
 
 async def add_confirm_callback(update: Update, context: CallbackContext):
     """Callback saving pending expenses after user confirmation."""
     query = update.callback_query
-    await query.answer()
 
-    pending_expenses = context.user_data.get("pending_expenses")
+    await query.answer()
+    context.user_data.pop("insertion_message_id", None)
+
+    pending_expenses = context.user_data.get("pending_insertion")
     if not pending_expenses:
         await query.edit_message_text("No pending expenses found.")
         return
@@ -45,13 +57,15 @@ async def add_confirm_callback(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     sql_add_expenses(user_id, pending_expenses)
     
-    context.user_data.pop("pending_expenses", None)
+    context.user_data.pop("pending_insertion", None)
     await query.edit_message_text(f"{len(pending_expenses)} expense(s) added successfully!")
 
 async def add_cancel_callback(update: Update, context: CallbackContext):
     """Callback cancelling new transactions"""
     query = update.callback_query
-    await query.answer()
 
-    context.user_data.pop("pending_expenses", None)
+    await query.answer()
+    context.user_data.pop("insertion_message_id", None)
+
+    context.user_data.pop("pending_insertion", None)
     await query.edit_message_text("Expense entry cancelled.")

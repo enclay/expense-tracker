@@ -21,6 +21,14 @@ async def delete_handle(update: Update, context: CallbackContext):
         await update.message.reply_text("No matching expenses found for deletion.")
         return
 
+    message_id  = context.user_data.pop("deletion_message_id", None)
+    if message_id:
+        await context.bot.edit_message_text(
+            text="Expenses deletion is cancelled.",
+            message_id=message_id,
+            chat_id=update.message.chat_id
+        )
+
     confirmation_text = "**Please confirm the deletion of these expenses:**\n\n"
     for i, expense in enumerate(expenses_to_delete, 1):
         formatted_time = datetime.fromtimestamp(int(expense.time)).strftime("%d/%m/%Y, %H:%M")
@@ -32,14 +40,17 @@ async def delete_handle(update: Update, context: CallbackContext):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    message = await update.message.reply_text(
         confirmation_text, reply_markup=reply_markup, parse_mode="Markdown"
     )
+    context.user_data["deletion_message_id"] = message.message_id
 
 async def delete_confirm_callback(update: Update, context: CallbackContext):
     """Callback deleting pending expenses after confirmation."""
     query = update.callback_query
+
     await query.answer()
+    context.user_data.pop("deletion_message_id", None)
 
     pending_deletion = context.user_data.get("pending_deletion")
     if not pending_deletion:
@@ -53,14 +64,15 @@ async def delete_confirm_callback(update: Update, context: CallbackContext):
     sql_delete_expenses(user_id, expense_ids)
 
     context.user_data.pop("pending_deletion", None)
-
     await query.edit_message_text(f"{len(expense_ids)} expense(s) successfully deleted!")
 
 
 async def delete_cancel_callback(update: Update, context: CallbackContext):
     """Callback canceling the pending expenses deletion."""
     query = update.callback_query
+
     await query.answer()
+    context.user_data.pop("deletion_message_id", None)
 
     context.user_data.pop("pending_deletion", None)
     await query.edit_message_text("Expense deletion cancelled.")
