@@ -3,7 +3,7 @@ from io import BytesIO
 from telegram import Update, InputFile
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_list_expenses, sql_add_expenses
-from bot.database.models import Expense
+from bot.models.expense import Expense
 
 
 async def export_handle(update: Update, context: CallbackContext):

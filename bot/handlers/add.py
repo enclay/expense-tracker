@@ -3,7 +3,7 @@ from typing import List
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_add_expenses
-from bot.database.models import Expense 
+from bot.models.expense import Expense 
 from bot.llm.expense_parser import parse_expenses
 
 

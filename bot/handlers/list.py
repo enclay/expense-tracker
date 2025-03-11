@@ -5,6 +5,7 @@ from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
 from bot.database.operations import sql_list_expenses
 from bot.utils.currency import get_currency_symbol
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +26,23 @@ async def _refresh_list(update: Update, context: CallbackContext, period: str):
     except Exception:
         month_title = period
 
-    message_text = f"*Expenses for {month_title}:*\n"
+    message_text = f"*Expenses for {month_title}:*"
+
 
     if not expenses:
-        message_text += "\n\U0000274C *No expenses found.*"
+        message_text += "\n\n\U0000274C *No expenses found.*"
     else:
+        total_dict = {}
+        for exp in expenses:
+            if exp.currency not in total_dict:
+                total_dict[exp.currency] = 0
+            total_dict[exp.currency] += exp.cost
+
+        totals = []
+        for currency, total in total_dict.items():
+            totals.append(f"{get_currency_symbol(currency)}{total:.2f}")
+        message_text += f"\n`{", ".join(totals)}`\n\n" 
+
         for exp in expenses:
             message_text += f"- {exp.description} - {exp.cost}{get_currency_symbol(exp.currency)}\n"
 

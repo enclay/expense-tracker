@@ -7,6 +7,7 @@ from bot.llm.intent import parse_intent
 
 async def message_input_handle(update: Update, context: CallbackContext):
     """Handle processing general messages such as new expense entry."""
+
     message_text = update.message.text
         
     if "insertion_message_id" in context.user_data:
@@ -25,7 +26,6 @@ async def message_input_handle(update: Update, context: CallbackContext):
 
 async def unknown_handle(update: Update, callback: CallbackContext):
     """Handle processing unknown commands."""
-
     message = (
             "*Oops!* I didn’t quite catch that. Could you please clarify what you’d like to do? \U0001F60A\n\n"
             "*Here’s what I can help you with:*\n"

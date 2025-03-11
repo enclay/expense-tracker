@@ -1,7 +1,7 @@
 import json
 import logging
 from openai import OpenAI
-from bot.utils.config import OPENAI_API_KEY
+from bot.utils.config import OPENAI_API_KEY, OPENAI_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def parse_intent(user_input: str) -> str:
         ]
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=OPENAI_MODEL,
             messages=messages,
             max_tokens=50,
         )

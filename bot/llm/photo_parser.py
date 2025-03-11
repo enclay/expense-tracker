@@ -2,8 +2,8 @@ import logging
 import json
 from typing import List
 from openai import OpenAI
-from bot.utils.config import OPENAI_API_KEY
-from bot.database.models import Expense
+from bot.utils.config import OPENAI_API_KEY, OPENAI_MODEL
+from bot.models.expense import Expense
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ def parse_expenses_from_photo(base64_image: str) -> List[Expense]:
         ]
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=OPENAI_MODEL,
             messages=messages,
             max_tokens=500,
         )

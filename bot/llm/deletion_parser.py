@@ -2,8 +2,8 @@ import json
 import logging
 from openai import OpenAI
 from datetime import datetime
-from bot.utils.config import OPENAI_API_KEY
-from bot.database.models import ExpenseWithId
+from bot.utils.config import OPENAI_API_KEY, OPENAI_MODEL 
+from bot.models.expense import ExpenseWithId
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def filter_expenses_for_delete(expenses: list[ExpenseWithId], user_input: str) -
         ]
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=OPENAI_MODEL,
             messages=messages,
             max_tokens=1000,
         )

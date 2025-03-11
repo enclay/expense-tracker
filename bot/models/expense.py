@@ -1,6 +1,6 @@
 import logging
-from dataclasses import dataclass
 from datetime import datetime, timedelta
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class Expense:
     currency: str
     time: int
 
-    @staticmethod
     def from_json(data: dict, time_offset: bool = False):
         """Parse Expense object from JSON."""
         
@@ -68,13 +67,11 @@ class Expense:
             "currency": self.currency,
             "time": self.time
         }
-
 @dataclass
 class ExpenseWithId(Expense):
     """Represents an expense with id."""
     id: int
 
-    @staticmethod
     def from_json(data: dict, time_offset: bool = False):
         """Parses ExpenseWithId object from JSON."""
 

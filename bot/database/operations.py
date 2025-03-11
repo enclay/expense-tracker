@@ -2,7 +2,7 @@ import logging
 import sqlite3
 from typing import List
 from bot.utils.config import DB_PATH
-from bot.database.models import ExpenseWithId, Expense
+from bot.models.expense import ExpenseWithId, Expense
 
 logger = logging.getLogger(__name__)
 
