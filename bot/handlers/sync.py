@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, date
 from io import BytesIO
 from telegram import Update, InputFile
 from telegram.ext import CallbackContext
@@ -22,7 +23,7 @@ async def export_handle(update: Update, context: CallbackContext):
             "description": exp.description,
             "cost": exp.cost,
             "currency": exp.currency,
-            "time": exp.time
+            "payment_date": exp.payment_date
         })
 
     json_data = json.dumps(expense_data, indent=4)
@@ -49,7 +50,7 @@ async def import_handle(update: Update, context: CallbackContext):
             raise ValueError("The root element must be a list.")
 
         expenses = []
-        required_keys = ["description", "cost", "currency", "time"]
+        required_keys = ["description", "cost", "currency", "payment_date"]
 
         for entry in data:
             if not all(key in entry for key in required_keys):
@@ -59,7 +60,7 @@ async def import_handle(update: Update, context: CallbackContext):
                 description=entry["description"],
                 cost=float(entry["cost"]),
                 currency=entry["currency"],
-                time=int(entry["time"])
+                payment_date=date.fromisoformat(entry["payment_date"])
             ))
 
         if expenses:

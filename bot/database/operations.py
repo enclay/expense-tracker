@@ -13,13 +13,13 @@ def sql_add_expenses(user_id: int, expenses: List[Expense]):
             cursor = conn.cursor()
 
             expense_data = [
-                (user_id, exp.description, exp.cost, exp.currency, exp.time)
+                (user_id, exp.description, exp.cost, exp.currency, exp.payment_date)
                 for exp in expenses
             ]
 
             if expense_data:
                 cursor.executemany(
-                    "INSERT INTO Expense (user_id, description, cost, currency, time) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO Expense (user_id, description, cost, currency, payment_date) VALUES (?, ?, ?, ?, ?)",
                     expense_data
                 )
                 conn.commit()
@@ -47,22 +47,22 @@ def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
                 if len(period) == 7:  # Format YYYY-MM (month-based filter)
                     cursor.execute(
                         """
-                        SELECT id, description, cost, currency, time 
+                        SELECT id, description, cost, currency, payment_date 
                         FROM Expense 
                         WHERE user_id = ? 
-                          AND strftime('%Y-%m', datetime(time, 'unixepoch')) = ?
-                        ORDER BY time DESC
+                          AND strftime('%Y-%m', payment_date) = ?
+                        ORDER BY payment_date DESC
                         """,
                         (user_id, period)
                     )
                 elif len(period) == 4:  # Format YYYY (year-based filter)
                     cursor.execute(
                         """
-                        SELECT id, description, cost, currency, time 
+                        SELECT id, description, cost, currency, payment_date 
                         FROM Expense 
                         WHERE user_id = ? 
-                          AND strftime('%Y', datetime(time, 'unixepoch')) = ?
-                        ORDER BY time DESC
+                          AND strftime('%Y', payment_date) = ?
+                        ORDER BY payment_date DESC
                         """,
                         (user_id, period)
                     )
@@ -72,10 +72,10 @@ def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
             else:
                 cursor.execute(
                     """
-                    SELECT id, description, cost, currency, time
+                    SELECT id, description, cost, currency, payment_date
                     FROM Expense
                     WHERE user_id = ?
-                    ORDER BY time DESC
+                    ORDER BY payment_date DESC
                     """,
                     (user_id,)
                 )
@@ -86,7 +86,7 @@ def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
                     description=row[1],
                     cost=row[2],
                     currency=row[3],
-                    time=row[4]
+                    payment_date=row[4]
                 )
                 for row in cursor.fetchall()
             ]

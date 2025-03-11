@@ -26,7 +26,7 @@ def filter_expenses_for_delete(expenses: list[ExpenseWithId], user_input: str) -
                 "description": exp.description,
                 "cost": exp.cost,
                 "currency": exp.currency,
-                "time": _convert_timestamp_to_str(exp.time)
+                "payment_date": exp.payment_date
             }
             for exp in expenses
         ]

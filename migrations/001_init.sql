@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS Expense (
     description TEXT NOT NULL,
 	cost REAL NOT NULL,
     currency TEXT NOT NULL,
-    time INTEGER NOT NULL
+    payment_date DATE NOT NULL
 );
 
 CREATE INDEX idx_expense_user ON Expense(user_id);
-CREATE INDEX idx_expense_time ON Expense(time);
+CREATE INDEX idx_expense_time ON Expense(payment_date);

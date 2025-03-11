@@ -31,8 +31,7 @@ async def delete_handle(update: Update, context: CallbackContext):
 
     confirmation_text = "**Please confirm the deletion of these expenses:**\n\n"
     for i, expense in enumerate(expenses_to_delete, 1):
-        formatted_time = datetime.fromtimestamp(int(expense.time)).strftime("%d/%m/%Y, %H:%M")
-        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_time})\n"
+        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({expense.payment_date})\n"
 
     keyboard = [
         [InlineKeyboardButton("\u2705 Confirm", callback_data="confirm_deletion")],

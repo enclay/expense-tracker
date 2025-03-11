@@ -1,6 +1,7 @@
 import logging
 import json
 from typing import List
+from datetime import datetime
 from openai import OpenAI
 from bot.utils.config import OPENAI_API_KEY, OPENAI_MODEL
 from bot.models.expense import Expense
@@ -20,11 +21,9 @@ def parse_expenses_from_photo(base64_image: str) -> List[Expense]:
           - "description" (description of expense)
           - "cost" (as a float)
           - "currency" (ISO 4217: USD, EUR, RUB, GBP)
-          - "time_offset" (relative time offset as **-Xd / +Xm format**, where X is a number):
-            - "-1d" for "yesterday"
-            - "-7d" for "one week ago"
-            - "+2m" for "in 2 months"
-            - Default to "0d" (today) if no time is specified.
+          - "payment_date" (the exact date of the expense in "YYYY-MM-DD" format):
+              - !IMPORTANT Use today's date ({datetime.now().strftime("%Y-%m-%d")}) if no specific time is mentioned.
+              - Calculate the new date if required.
 
         - If no cost is found, default to 5.00.
         - If no currency is found, default to "USD".

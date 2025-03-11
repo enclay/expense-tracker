@@ -31,8 +31,7 @@ async def present_expenses_for_confirmation(update: Update, context: CallbackCon
 
     confirmation_text = "Please confirm your expenses:\n\n"
     for i, expense in enumerate(expenses, 1):
-        formatted_time = datetime.fromtimestamp(int(expense.time)).strftime("%d/%m/%Y, %H:%M")
-        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_time})\n"
+        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({expense.payment_date})\n"
 
     keyboard = [
         [InlineKeyboardButton("\u2705 Confirm", callback_data="confirm_expense")],
