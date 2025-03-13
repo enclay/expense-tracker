@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 from typing import List
+from datetime import datetime
 from bot.utils.config import DB_PATH
 from bot.models.expense import ExpenseWithId, Expense
 
@@ -84,9 +85,9 @@ def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
                 ExpenseWithId(
                     id=row[0],
                     description=row[1],
-                    cost=row[2],
+                    cost=float(row[2]),
                     currency=row[3],
-                    payment_date=row[4]
+                    payment_date=datetime.strptime(row[4], "%Y-%m-%d").date()
                 )
                 for row in cursor.fetchall()
             ]

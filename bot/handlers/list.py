@@ -5,7 +5,6 @@ from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
 from bot.database.operations import sql_list_expenses
 from bot.utils.currency import get_currency_symbol
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ async def _refresh_list(update: Update, context: CallbackContext, period: str):
         message_text += f"\n`{", ".join(totals)}`\n\n" 
 
         for exp in expenses:
-            message_text += f"- {exp.description} - {exp.cost}{get_currency_symbol(exp.currency)}\n"
+            message_text += f"- {exp.description} - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime("%d %b")})\n"
 
     keyboard = [
         [

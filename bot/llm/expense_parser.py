@@ -14,7 +14,8 @@ def parse_expenses(user_input: str) -> List[Expense]:
         client = OpenAI(api_key=OPENAI_API_KEY)
 
         prompt = f"""
-        Detect the language of the following message and extract one or more expenses while keeping the original language for descriptions:
+        Detect the language of the following message and extract one or more expenses while keeping the original language for descriptions
+        and calculating correct date for it:
         "{user_input}"
 
         - Each expense should have:
@@ -22,27 +23,27 @@ def parse_expenses(user_input: str) -> List[Expense]:
           - "cost" (as a float)
           - "currency" (ISO 4217: USD, EUR, RUB, GBP)
           - "payment_date" (the exact date of the expense in "YYYY-MM-DD" format):
-              - !IMPORTANT Use today's date ({datetime.now().strftime("%Y-%m-%d")}) if no specific time is mentioned.
-              - Calculate the new date if required.
+              - !IMPORTANT Calculate the date RELATIVE to today's date ({datetime.now().strftime("%Y-%m-%d")}).
 
-        - If no cost is found, default to 5.00.
-        - If no currency is found, default to "USD".
+        - If a month is different and day is not explicitly specified: default to day 1 in date.
+        - If no cost is found: default to 5.00.
+        - If no currency is found: default to "USD".
         - Do NOT wrap the response in markdown (no ```json format).
         - Return ONLY a valid JSON object, nothing else.
 
         **Examples:**
 
-        **Input:** "I spent 10 dollars on lunch yesterday and 5 euros on coffee today."
+        **Input:** "I spent 10 dollars on lunch yesterday and 5 euros on coffee today. (assuming today's date: 13.03.2077)"
         **Output:**
         [
-            {{"description": "Lunch", "cost": 10.0, "currency": "usd", "payment_date": "YYYY-MM-DD"}},
-            {{"description": "Coffee", "cost": 5.0, "currency": "eur", "payment_date": "YYYY-MM-DD"}}
+            {{"description": "Lunch", "cost": 10.0, "currency": "usd", "payment_date": "2077-03-12"}},
+            {{"description": "Coffee", "cost": 5.0, "currency": "eur", "payment_date": "2077-03-13"}}
         ]
 
-        **Input:** "I will pay 100 GBP for rent in 2 months."
+        **Input:** "I will pay 100 GBP for rent in 2 months. (assuming today's date: 13.03.2077)"
         **Output:**
         [
-            {{"description": "Rent", "cost": 100.0, "currency": "gbp", "payment_date": "YYYY-MM-DD"}}
+            {{"description": "Rent", "cost": 100.0, "currency": "gbp", "payment_date": "2077-05-13"}}
         ]
         """
 
@@ -54,7 +55,7 @@ def parse_expenses(user_input: str) -> List[Expense]:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=messages,
-            max_tokens=500,
+            max_tokens=5000,
         )
 
         gpt_output = response.choices[0].message.content.strip()
