@@ -32,54 +32,31 @@ def sql_add_expenses(user_id: int, expenses: List[Expense]):
         logger.error(f"Error adding batch expenses: {e}")
 
 
-def sql_list_expenses(user_id: int, period: str = None) -> List[ExpenseWithId]:
-    """
-    Fetch all expenses for a user.
-
-    - If `period` is `YYYY-MM`, filters by month.
-    - If `period` is `YYYY`, filters by year.
-    - If `period` is None, fetches all expenses.
-    """
+def sql_list_expenses(user_id: int, year: int = None, month: int = None) -> List[ExpenseWithId]:
+    """Fetch all expenses for a user."""
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
 
-            if period:
-                if len(period) == 7:  # Format YYYY-MM (month-based filter)
-                    cursor.execute(
-                        """
-                        SELECT id, description, cost, currency, payment_date 
-                        FROM Expense 
-                        WHERE user_id = ? 
-                          AND strftime('%Y-%m', payment_date) = ?
-                        ORDER BY payment_date DESC
-                        """,
-                        (user_id, period)
-                    )
-                elif len(period) == 4:  # Format YYYY (year-based filter)
-                    cursor.execute(
-                        """
-                        SELECT id, description, cost, currency, payment_date 
-                        FROM Expense 
-                        WHERE user_id = ? 
-                          AND strftime('%Y', payment_date) = ?
-                        ORDER BY payment_date DESC
-                        """,
-                        (user_id, period)
-                    )
-                else:
-                    logger.warning(f"Invalid period format: {period}")
-                    return []
-            else:
-                cursor.execute(
-                    """
-                    SELECT id, description, cost, currency, payment_date
-                    FROM Expense
-                    WHERE user_id = ?
-                    ORDER BY payment_date DESC
-                    """,
-                    (user_id,)
-                )
+            query = """
+                SELECT id, description, cost, currency, payment_date 
+                FROM Expense 
+                WHERE user_id = ?
+            """
+            
+            params = [user_id]
+
+            if year:
+                query += " AND strftime('%Y', payment_date) = ?"
+                params.append(str(year))
+
+            if month:
+                query += " AND strftime('%m', payment_date) = ?"
+                params.append(f"{month:02d}")
+
+            query += " ORDER BY payment_date DESC"
+
+            cursor.execute(query, params)
 
             return [
                 ExpenseWithId(
