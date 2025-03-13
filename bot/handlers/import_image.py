@@ -5,7 +5,7 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ChatAction
-from bot.llm.photo_parser import parse_expenses_from_photo
+from bot.llm.expense_parser import parse_expenses_from_photo
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def import_image_handle(update: Update, context: CallbackContext) -> None:
 
     confirmation_text = "Please confirm your expenses:\n\n"
     for i, expense in enumerate(expenses, 1):
-        formatted_time = datetime.fromtimestamp(int(expense.time)).strftime("%d/%m/%Y, %H:%M")
+        formatted_time = expense.payment_date.strftime("%Y-%m")
         confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({formatted_time})\n"
 
     keyboard = [

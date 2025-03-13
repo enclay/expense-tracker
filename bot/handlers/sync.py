@@ -23,7 +23,7 @@ async def export_handle(update: Update, context: CallbackContext):
             "description": exp.description,
             "cost": exp.cost,
             "currency": exp.currency,
-            "payment_date": exp.payment_date
+            "payment_date": exp.payment_date.strftime("%Y-%m-%d")
         })
 
     json_data = json.dumps(expense_data, indent=4)

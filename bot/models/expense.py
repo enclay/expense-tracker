@@ -14,12 +14,13 @@ class Expense:
 
     def from_json(data: dict):
         """Parse Expense object from JSON."""
-        
+
         return Expense(
             description=data.get("description", "unknown expense"),
             cost=float(data.get("cost", 5.00)),
             currency=data.get("currency", "usd").lower(),
-            payment_date=data.get("payment_date", datetime.now().strftime("%Y-%m-%d"))
+            #payment_date=data.get("payment_date", datetime.now().strftime("%Y-%m-%d"))
+            payment_date = datetime.strptime(data.get("payment_date", datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d").date()
         )
 
     def to_json(self) -> dict:
@@ -30,6 +31,7 @@ class Expense:
             "currency": self.currency,
             "payment_date": self.payment_date
         }
+
 @dataclass
 class ExpenseWithId(Expense):
     """Represents an expense with id."""

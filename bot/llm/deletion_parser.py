@@ -7,11 +7,6 @@ from bot.models.expense import ExpenseWithId
 
 logger = logging.getLogger(__name__)
 
-def _convert_timestamp_to_str(ts: int):
-    """Converts Unix timestamp to human-readable string."""
-    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
-
-
 def filter_expenses_for_delete(expenses: list[ExpenseWithId], user_input: str) -> list[ExpenseWithId]:
     """
     Determines which expenses should be deleted based on user input.
@@ -26,7 +21,7 @@ def filter_expenses_for_delete(expenses: list[ExpenseWithId], user_input: str) -
                 "description": exp.description,
                 "cost": exp.cost,
                 "currency": exp.currency,
-                "payment_date": exp.payment_date
+                "payment_date": exp.payment_date.strftime("%Y-%m-%d")
             }
             for exp in expenses
         ]
