@@ -19,13 +19,13 @@ def apply_migrations():
         print("Please install sqlite3!")
         return
 
-    for migration in sorted(migrations_dir.glob("*.sql")):
+    for migration_file in sorted(migrations_dir.glob("*.sql")):
         try:
-            print(f"Running migration: {migration}")
-            command = f"sqlite3 {db_path} < {migration}"
+            print(f"Running migration: {migration_file}")
+            command = f"sqlite3 {db_path} < {migration_file}"
             subprocess.run(command, shell=True, check=True)
         except subprocess.CalledProcessError as e:
-            print(f"Error applying migration {migration}: {e}")
+            print(f"Error applying migration {migration_file.name[0:3]}: {e}")
             return
 
     print("All migrations applied successfully.")
