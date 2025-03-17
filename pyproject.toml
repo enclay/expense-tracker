@@ -14,6 +14,7 @@ dependencies = [
 
 [tool.poetry.scripts]
 start = "bot.main:main"
+migrate = "scripts.migrate:apply_migrations"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
