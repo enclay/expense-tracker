@@ -1,9 +1,9 @@
-# Prerequisites
+## Prerequisites
 
 - [Poetry](https://python-poetry.org/docs/)
 - Python `3.11` or later 
 
-# Setup
+## Setup
 ```bash
 poetry install # Install dependencies
 poetry run migrate # Apply database migrations
