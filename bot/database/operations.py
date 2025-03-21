@@ -73,6 +73,33 @@ def sql_list_expenses(user_id: int, year: int = None, month: int = None) -> List
         logger.error(f"Error listing expenses: {e}")
         return []
 
+def sql_get_expense_by_id(expense_id: int, user_id: int):
+    """Retrieve an expense by its id."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            query = """
+                SELECT id, description, cost, currency, payment_date 
+                FROM Expense 
+                WHERE id = ?
+                AND user_id = ?
+            """
+            cursor.execute(query, (expense_id, user_id))
+            row = cursor.fetchone()
+
+            return ExpenseWithId(
+                id=row[0],
+                description=row[1],
+                cost=float(row[2]),
+                currency=row[3],
+                payment_date=datetime.strptime(row[4], "%Y-%m-%d").date()
+            )
+
+    except sqlite3.Error as e:
+        logger.error(f"Error listing expenses: {e}")
+        return []
+
 
 def sql_delete_expenses(user_id: int, expense_ids: List[int]):
     """Delete multiple expenses by their IDs for a specific user."""
@@ -94,3 +121,23 @@ def sql_delete_expenses(user_id: int, expense_ids: List[int]):
 
     except sqlite3.Error as e:
         logger.error(f"Error deleting expenses for user {user_id}: {e}")
+
+def sql_update_description(user_id: int, expense_id: int, desc: str):
+    """Update description of an expense with corresponding id"""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            query = """
+            UPDATE Expense
+            SET description = ?
+            WHERE id = ?
+            AND user_id = ?
+            """
+
+            cursor.execute(query, (desc, expense_id, user_id))
+            conn.commit()
+
+    except sqlite3.Error as e:
+        logger.error(f"Error updating expenses for user {user_id}: {e}")
+

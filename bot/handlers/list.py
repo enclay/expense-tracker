@@ -5,6 +5,7 @@ from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
 from bot.database.operations import sql_list_expenses
 from bot.utils.currency import get_currency_symbol
+from bot.utils.exchange_rate import EXCHANGE_RATES
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ async def list_handle(update: Update, context: CallbackContext):
     """Display expenses for the current month with pagination."""
     period = datetime.now()
     await _refresh_list(update, context, period)
+
 
 async def _refresh_list(update: Update, context: CallbackContext, period: datetime):
     """Refresh the expense list based on specified time period."""
@@ -24,19 +26,19 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
     if not expenses:
         message_text += "\n\n\U0000274C *No expenses found.*"
     else:
-        total_dict = {}
+        total = 0.0
         for exp in expenses:
-            if exp.currency not in total_dict:
-                total_dict[exp.currency] = 0
-            total_dict[exp.currency] += exp.cost
+            rate = EXCHANGE_RATES.get(exp.currency, None)
+            if rate is None:
+                logger.info(f"unrecognized currency {exp.currency}")
+            else:
+                total += exp.cost * rate
 
-        totals = []
-        for currency, total in total_dict.items():
-            totals.append(f"{get_currency_symbol(currency)}{total:.2f}")
-        message_text += f"\n`{", ".join(totals)}`\n\n" 
+        message_text += f"\n`${total:.2f}`\n\n"
 
         for exp in expenses:
-            message_text += f"- {exp.description} - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime("%d %b")})\n"
+            message_text += f"- [{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id}) - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime("%d %b")}) "
+            message_text += f"\n"
 
     callback_date = period.strftime("%Y-%m")
 
@@ -46,6 +48,7 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
             InlineKeyboardButton("Next →", callback_data=f"list:next:{callback_date}")
         ]
     ]
+
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.callback_query:

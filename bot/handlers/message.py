@@ -1,26 +1,21 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 from bot.handlers.add import add_handle 
-from bot.handlers.delete import delete_handle
-from bot.handlers.edit import edit_insertion_handle, edit_deletion_handle 
+from bot.handlers.deeplink import change_description
 from bot.llm.intent import parse_intent
 
 async def message_input_handle(update: Update, context: CallbackContext):
     """Handle processing general messages such as new expense entry."""
 
     message_text = update.message.text
-        
-    if "insertion_message_id" in context.user_data:
-        await edit_insertion_handle(update, context)
 
-    elif "deletion_message_id" in context.user_data:
-        await edit_deletion_handle(update, context)
+    if "pending_description_change" in context.user_data:
+        await change_description(update, context)
+
     else:
         intent = parse_intent(message_text)
         if intent == "add":
             await add_handle(update, context)
-        elif intent == "delete":
-            await delete_handle(update, context)
         else:
             await unknown_handle(update, context)
 
