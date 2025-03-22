@@ -12,7 +12,7 @@ from bot.handlers.deeplink import deeplink_handle
 from bot.handlers.sync import export_handle, import_handle
 from bot.utils.config import TELEGRAM_BOT_TOKEN
 from bot.filters import MessageFilters 
-from bot.handlers.deeplink import change_description_callback, delete_expense_callback
+from bot.handlers.deeplink import change_description_callback, delete_expense_callback, view_cancel_callback
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -42,6 +42,7 @@ def main():
 
     app.add_handler(CallbackQueryHandler(change_description_callback, pattern=r"^expense_change_description:"))
     app.add_handler(CallbackQueryHandler(delete_expense_callback, pattern=r"^expense_delete:"))
+    app.add_handler(CallbackQueryHandler(view_cancel_callback, pattern=r"^expense_view_cancel"))
 
     app.add_handler(CommandHandler("start", deeplink_handle))
     app.add_handler(CommandHandler("list", list_handle))
