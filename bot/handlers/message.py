@@ -11,7 +11,6 @@ async def message_input_handle(update: Update, context: CallbackContext):
 
     if "pending_description_change" in context.user_data:
         await change_description(update, context)
-
     else:
         intent = parse_intent(message_text)
         if intent == "add":
