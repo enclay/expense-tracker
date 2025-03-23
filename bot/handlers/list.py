@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 async def list_handle(update: Update, context: CallbackContext):
     """Display expenses for the current month with pagination."""
-    period = datetime.now()
+
+    period = context.user_data.get("list_last_month", datetime.now())
+
     await _refresh_list(update, context, period)
 
 
@@ -87,6 +89,8 @@ async def list_expense_callback(update: Update, context: CallbackContext):
             new_month = _change_month(dt, -1)
         elif direction == "next":
             new_month = _change_month(dt, 1)
+
+        context.user_data["list_last_month"] = new_month
 
     except Exception as e:
         logger.error(f"Error parsing callback data '{data}': {e}")
