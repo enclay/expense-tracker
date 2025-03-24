@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 def sql_add_expenses(user_id: int, expenses: List[Expense]):
     """Add multiple expenses to the database with a single transaction."""
     try:
+        sql_create_user_if_needed(user_id)
+
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
 
@@ -141,3 +143,38 @@ def sql_update_description(user_id: int, expense_id: int, desc: str):
     except sqlite3.Error as e:
         logger.error(f"Error updating expenses for user {user_id}: {e}")
 
+def sql_create_user_if_needed(user_id: int, currency: str = "usd"):
+    """Create new user if needed"""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            query = """
+            INSERT OR IGNORE
+            INTO User (id, currency)
+            VALUES (?, ?)
+            """
+
+            cursor.execute(query, (user_id, currency))
+            conn.commit()
+
+    except sqlite3.Error as e:
+        logger.error(f"Error trying to create new user {user_id}: {e}")
+
+def sql_get_user_by_id(user_id: int):
+    """Get user by id"""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            query = """
+            SELECT id, currency
+            FROM User
+            WHERE User.id = ?
+            """
+
+            cursor.execute(query, (user_id,))
+            conn.commit()
+
+    except sqlite3.Error as e:
+        logger.error(f"Error trying to create new user {user_id}: {e}")
