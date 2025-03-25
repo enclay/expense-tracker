@@ -3,7 +3,7 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
-from bot.database.operations import sql_list_expenses
+from bot.database.operations import sql_list_expenses, sql_get_user_by_id
 from bot.utils.currency import get_currency_symbol
 from bot.utils.exchange_rate import EXCHANGE_RATES
 
@@ -36,7 +36,11 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
             else:
                 total += exp.cost * rate
 
-        message_text += f"\n`${total:.2f}`\n\n"
+        user = sql_get_user_by_id(user_id)
+        factor = EXCHANGE_RATES.get(user.currency)
+        total = float(factor) * float(total)
+
+        message_text += f"\n`{get_currency_symbol(user.currency)}{total:.2f}`\n\n"
 
         for exp in expenses:
             message_text += f"- [{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id}) - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime("%d %b")}) "

@@ -4,6 +4,7 @@ from typing import List
 from datetime import datetime
 from bot.utils.config import DB_PATH
 from bot.models.expense import ExpenseWithId, Expense
+from bot.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,27 @@ def sql_get_user_by_id(user_id: int):
             """
 
             cursor.execute(query, (user_id,))
+            row = cursor.fetchone()
+            return User(int(row[0]), row[1])
+
+    except sqlite3.Error as e:
+        logger.error(f"Error trying to retrieve user {user_id}: {e}")
+
+
+def sql_update_user(user: User):
+    """Get user by id"""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            query = """
+            Update User
+            SET currency = ?
+            WHERE User.id = ?
+            """
+
+            cursor.execute(query, (user.currency, user.id))
             conn.commit()
 
     except sqlite3.Error as e:
-        logger.error(f"Error trying to create new user {user_id}: {e}")
+        logger.error(f"Error trying to update user {user.id}: {e}")

@@ -1,4 +1,4 @@
-import logging 
+import logging
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
@@ -40,9 +40,14 @@ async def view_expense(update: Update, context: CallbackContext, expense_id: int
 async def change_description_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
+    
+    expense_id = query.data.split(":")[1]
+    context.user_data["pending_description_change"] = expense_id
 
-    context.user_data["pending_description_change"] = query.data.split(":")[1]
-    await context.bot.send_message(query.message.chat.id, "Please enter new description:")
+    await context.bot.send_message(
+        query.message.chat.id,
+        "Please enter new description:"
+    )
 
 async def change_description(update: Update, context: CallbackContext):
     message = update.message
