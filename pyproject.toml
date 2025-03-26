@@ -1,17 +1,15 @@
-[project]
+[tool.poetry]
 name = "bot"
 version = "0.1.0"
 description = "Expense Tracker Bot"
-authors = [
-    {name = "enclay",email = "enclayff@gmail.com"}
-]
-requires-python = ">=3.11"
-dependencies = [
-    "python-telegram-bot",
-    "python-dotenv",
-    "openai",
-    "requests (>=2.32.3,<3.0.0)"
-]
+authors = ["enclay <enclayff@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+python-telegram-bot = "*"
+python-dotenv = "*"
+openai = "*"
+requests = "*"
 
 [tool.poetry.scripts]
 start = "bot.main:main"

@@ -23,7 +23,7 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
 
     expenses = sql_list_expenses(user_id, period.year, period.month)
 
-    message_text = f"*Expenses for {period.strftime("%B %Y")}:*"
+    message_text = f"*Expenses for {period.strftime('%B %Y')}:*"
 
     if not expenses:
         message_text += "\n\n\U0000274C *No expenses found.*"
@@ -43,7 +43,7 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
         message_text += f"\n`{get_currency_symbol(user.currency)}{total:.2f}`\n\n"
 
         for exp in expenses:
-            message_text += f"- [{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id}) - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime("%d %b")}) "
+            message_text += f"- [{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id}) - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime('%d %b')}) "
             message_text += f"\n"
 
     callback_date = period.strftime("%Y-%m")

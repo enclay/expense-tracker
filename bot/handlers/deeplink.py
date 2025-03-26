@@ -26,10 +26,9 @@ async def view_expense(update: Update, context: CallbackContext, expense_id: int
         [InlineKeyboardButton("Cancel", callback_data=f"expense_view_cancel")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-
     reply_message = f"[{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id})\n"
     reply_message += f"cost: {exp.cost}{get_currency_symbol(exp.currency)}\n"
-    reply_message += f"date: {exp.payment_date.strftime("%d %b")}"
+    reply_message += f"date: {exp.payment_date.strftime('%d %b')}"
 
     await update.message.reply_text(
         reply_message,
