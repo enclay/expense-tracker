@@ -28,17 +28,17 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
     if not expenses:
         message_text += "\n\n\U0000274C *No expenses found.*"
     else:
-        total = 0.0
+        usd_total = 0.0
         for exp in expenses:
             rate = EXCHANGE_RATES.get(exp.currency, None)
             if rate is None:
                 logger.info(f"unrecognized currency {exp.currency}")
             else:
-                total += exp.cost * rate
+                usd_total += exp.cost / rate
 
         user = sql_get_user_by_id(user_id)
         factor = EXCHANGE_RATES.get(user.currency)
-        total = float(factor) * float(total)
+        total = usd_total * factor
 
         message_text += f"\n`{get_currency_symbol(user.currency)}{total:.2f}`\n\n"
 
