@@ -14,9 +14,11 @@ EXTRACT_PROMPT = f"""
       - "cost" (as a float)
       - "currency" (ISO 4217: USD, EUR, RUB, GBP)
       - "payment_date" (the exact date of the expense in "YYYY-MM-DD" format):
-          - !IMPORTANT Calculate the date RELATIVE to today's date ({datetime.now().strftime("%Y-%m-%d")}).
 
+    - Calculate the date RELATIVE to today's date ({datetime.now().strftime("%Y-%m-%d")}).
+    - Description as a whole should be put to base (nominative) form
     - If a month is different and day is not explicitly specified: default to day 1 in date.
+    - If no date information is given: default to current date (given above).
     - If no cost is found: default to 5.00.
     - If no currency is found: default to "USD".
     - Do NOT wrap the response in markdown (no ```json format).
