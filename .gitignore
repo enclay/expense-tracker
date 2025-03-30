@@ -3,6 +3,7 @@ __pycache__
 *.pyc
 .env
 .db
+.docker-data
 poetry.lock
 
 !.env.template

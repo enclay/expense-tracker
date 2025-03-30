@@ -1,6 +1,8 @@
 version: '3.8'
 services:
-  myservice:
+  bot:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes:
+      - ./.docker-data/.db:/app/.db
