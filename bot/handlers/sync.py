@@ -9,7 +9,6 @@ from bot.models.expense import Expense
 
 async def export_handle(update: Update, context: CallbackContext):
     """Export user's spendings."""
-    
     user_id = update.effective_user.id
 
     expenses = sql_list_expenses(user_id)
@@ -29,11 +28,12 @@ async def export_handle(update: Update, context: CallbackContext):
     json_data = json.dumps(expense_data, indent=4)
     json_file = BytesIO(json_data.encode("utf-8"))
 
-    await update.message.reply_document(document=InputFile(json_file, filename="expenses.json"))
+    await update.message.reply_document(
+        document=InputFile(json_file, filename="expenses.json")
+    )
 
 async def import_handle(update: Update, context: CallbackContext):
     """Import user's spendings from a JSON file."""
-
     user_id = update.effective_user.id
 
     if not update.message.document:

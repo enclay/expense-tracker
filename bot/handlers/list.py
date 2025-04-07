@@ -6,6 +6,7 @@ from telegram.constants import ParseMode
 from bot.database.operations import sql_list_expenses, sql_get_user_by_id
 from bot.utils.currency import get_currency_symbol
 from bot.utils.exchange_rate import EXCHANGE_RATES
+from bot.utils.config import BOT_URL
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
         for exp in expenses:
             rate = EXCHANGE_RATES.get(exp.currency, None)
             if rate is None:
-                logger.info(f"unrecognized currency {exp.currency}")
+                logger.info(f"Unrecognized currency: {exp.currency}")
             else:
                 usd_total += exp.cost / rate
 
@@ -43,8 +44,9 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
         message_text += f"\n`{get_currency_symbol(user.currency)}{total:.2f}`\n\n"
 
         for exp in expenses:
-            message_text += f"- [{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id}) - {exp.cost}{get_currency_symbol(exp.currency)} ({exp.payment_date.strftime('%d %b')}) "
-            message_text += f"\n"
+            message_text += f"- [{exp.description}]({BOT_URL}?start=expense_{exp.id}) "
+            message_text += f"- {exp.cost}{get_currency_symbol(exp.currency)} "
+            message_text += f"({exp.payment_date.strftime('%d %b')}) \n"
 
     callback_date = period.strftime("%Y-%m")
 

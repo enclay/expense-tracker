@@ -1,21 +1,21 @@
-import logging
-from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_delete_expenses, sql_get_expense_by_id, sql_update_description
 from bot.utils.currency import get_currency_symbol
 
 async def deeplink_handle(update: Update, context: CallbackContext):
+    """Handle `/start` command as a deep link."""
     args = context.args
+
+    # delete /start command to not distract user
     await update.message.delete()
+
     if args and args[0].startswith("expense_"):
         expense_id = args[0].split("_")[1]
-        await view_expense(update, context, expense_id)
+        await _view_expense(update, context, expense_id)
 
-    else:
-        await update.message.reply_text("Welcome to the bot!")
-
-async def view_expense(update: Update, context: CallbackContext, expense_id: int):
+async def _view_expense(update: Update, context: CallbackContext, expense_id: int):
+    """View selected expense."""
     user_id = update.effective_user.id
 
     exp = sql_get_expense_by_id(expense_id, user_id)
@@ -37,7 +37,9 @@ async def view_expense(update: Update, context: CallbackContext, expense_id: int
     )
 
 async def change_description_callback(update: Update, context: CallbackContext):
+    """Callback asking for a new description."""
     query = update.callback_query
+
     await query.answer()
     
     expense_id = query.data.split(":")[1]
@@ -48,22 +50,37 @@ async def change_description_callback(update: Update, context: CallbackContext):
         "Please enter new description:"
     )
 
-async def change_description(update: Update, context: CallbackContext):
+async def change_description_handle(update: Update, context: CallbackContext):
+    """Callback actually changing description and printing success message."""
+    user_id = update.effective_user.id
     message = update.message
-    expense_id = context.user_data.pop("pending_description_change")
 
-    sql_update_description(update.effective_user.id, expense_id, message.text)
+    expense_id = context.user_data.pop("pending_description_change")
+    sql_update_description(user_id, expense_id, message.text)
+
     await update.message.reply_text(f"Description successfully changed to \"{message.text}\"!")
 
 async def delete_expense_callback(update: Update, context: CallbackContext):
+    """Callback deleting expension."""
     query = update.callback_query
+
     await query.answer()
 
     expense_id = query.data.split(":")[1]
     sql_delete_expenses(query.message.chat.id, [expense_id])
-    await context.bot.send_message(query.message.chat.id, "Description successully deleted!")
+
+    await context.bot.send_message(
+        query.message.chat.id,
+        "Description successully deleted!"
+    )
 
 async def view_cancel_callback(update: Update, context: CallbackContext):
+    """Callback showing expension details."""
     query = update.callback_query
+
     await query.answer()
-    await context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+
+    await context.bot.delete_message(
+        chat_id=query.message.chat.id,
+        message_id=query.message.message_id
+    )

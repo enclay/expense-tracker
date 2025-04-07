@@ -1,24 +1,19 @@
-from datetime import datetime
-from typing import List
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_add_expenses
-from bot.models.expense import Expense 
 from bot.llm.expense_parser import parse_expenses
 
 
 async def add_handle(update: Update, context: CallbackContext):
-    """Handle new expenses."""
+    """Handle for insertion of new expenses."""
     message_text = update.message.text
 
     expenses = parse_expenses(message_text)
-
-    await present_expenses_for_confirmation(update, context, expenses)
-
-async def present_expenses_for_confirmation(update: Update, context: CallbackContext, expenses: List[Expense]):
     if not expenses:
         await update.message.reply_text("No valid expenses found.")
         return
+
+    context.user_data["pending_insertion"] = expenses
 
     message_id  = context.user_data.pop("insertion_message_id", None)
     if message_id:
@@ -27,11 +22,11 @@ async def present_expenses_for_confirmation(update: Update, context: CallbackCon
             message_id=message_id,
             chat_id=update.message.chat_id
         )
-    context.user_data["pending_insertion"] = expenses
 
     confirmation_text = "Please confirm your expenses:\n\n"
-    for i, expense in enumerate(expenses, 1):
-        confirmation_text += f"*{i}.* {expense.description} - {expense.cost:.2f} {expense.currency.upper()} ({expense.payment_date})\n"
+    for i, exp in enumerate(expenses, start=1):
+        confirmation_text += f"*{i}.* {exp.description} - {exp.cost:.2f} "
+        confirmation_text += f"{exp.currency.upper()} ({exp.payment_date})\n"
 
     keyboard = [
         [InlineKeyboardButton("\u2705 Confirm", callback_data="confirm_expense")],
@@ -48,6 +43,7 @@ async def present_expenses_for_confirmation(update: Update, context: CallbackCon
 
 async def add_confirm_callback(update: Update, context: CallbackContext):
     """Callback saving pending expenses after user confirmation."""
+    user_id = update.effective_user.id
     query = update.callback_query
 
     await query.answer()
@@ -58,14 +54,13 @@ async def add_confirm_callback(update: Update, context: CallbackContext):
         await query.edit_message_text("No pending expenses found.")
         return
     
-    user_id = update.effective_user.id
     sql_add_expenses(user_id, pending_expenses)
     
     context.user_data.pop("pending_insertion", None)
     await query.edit_message_text(f"{len(pending_expenses)} expense(s) added successfully!")
 
 async def add_cancel_callback(update: Update, context: CallbackContext):
-    """Callback cancelling new transactions"""
+    """Callback cancelling new transactions."""
     query = update.callback_query
 
     await query.answer()
