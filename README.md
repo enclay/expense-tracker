@@ -1,14 +1,11 @@
-# 💸 AI-Powered Expense Tracker Bot
+# AI-Powered Expense Tracker Bot
 
 A sophisticated Telegram bot that simplifies personal finance tracking using Natural Language Processing. Instead of filling out tedious forms, just tell the bot what you spent, and let the AI handle the structured data.
 
-## 📍 Table of Contents
+## Table of Contents
 * [Features](#features)
 * [Tech Stack](#tech-stack)
 * [Getting Started](#getting-started)
-    * [Prerequisites](#prerequisites)
-    * [Local Installation](#local-installation)
-    * [Running with Docker](#running-with-docker)
 * [Usage](#usage)
 * [Project Structure](#project-structure)
 
@@ -37,7 +34,7 @@ A sophisticated Telegram bot that simplifies personal finance tracking using Nat
 * **Framework:** `python-telegram-bot`
 * **Intelligence:** OpenAI API (`gpt-4o` / `gpt-3.5-turbo`)
 * **Database:** SQLite (Relational storage)
-* **Dependency Management:** [Poetry](https://python-poetry.org/)
+* **Dependency Management:** Poetry
 * **DevOps:** Docker & Docker Compose
 
 ---
