@@ -19,6 +19,10 @@ async def _view_expense(update: Update, context: CallbackContext, expense_id: in
     user_id = update.effective_user.id
 
     exp = sql_get_expense_by_id(expense_id, user_id)
+    if exp is None:
+        await context.bot.send_message(update.effective_user.id, "Expense not found.")
+        return
+
 
     keyboard = [
         [InlineKeyboardButton("\u270f Change description", callback_data=f"expense_change_description:{expense_id}")],
@@ -67,11 +71,11 @@ async def delete_expense_callback(update: Update, context: CallbackContext):
     await query.answer()
 
     expense_id = query.data.split(":")[1]
-    sql_delete_expenses(query.message.chat.id, [expense_id])
+    sql_delete_expenses(update.effective_user.id, [expense_id])
 
     await context.bot.send_message(
         query.message.chat.id,
-        "Description successully deleted!"
+        "Expense successully deleted!"
     )
 
 async def view_cancel_callback(update: Update, context: CallbackContext):

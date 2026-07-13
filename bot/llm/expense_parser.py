@@ -61,7 +61,7 @@ def parse_expenses(user_input: str) -> List[Expense]:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=messages,
-            max_tokens=5000,
+            max_tokens=500,
         )
 
         gpt_output = response.choices[0].message.content.strip()

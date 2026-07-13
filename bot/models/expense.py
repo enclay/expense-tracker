@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, date
 from dataclasses import dataclass
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +15,24 @@ class Expense:
 
     def from_json(data: dict):
         """Parse Expense object from JSON."""
+        cost = float(data.get("cost", 5.00))
+        if not math.isfinite(cost) or not (0 < cost <= 1_000_000):
+            raise ValueError(f"Invalid cost: {cost}")
+
+        currency = str(data.get("currency", "usd")).lower()
+        if currency not in ("usd", "eur", "rub", "gbp"):
+            currency = "usd"
 
         return Expense(
-            description=data.get("description", "unknown expense"),
-            cost=float(data.get("cost", 5.00)),
-            currency=data.get("currency", "usd").lower(),
-            #payment_date=data.get("payment_date", datetime.now().strftime("%Y-%m-%d"))
-            payment_date = datetime.strptime(data.get("payment_date", datetime.now().strftime("%Y-%m-%d")), "%Y-%m-%d").date()
+            description=str(data.get("description", "unknown expense"))[:100],
+            cost=cost,
+            currency=currency,
+            payment_date=datetime.strptime(
+                data.get("payment_date", datetime.now().strftime("%Y-%m-%d")),
+                "%Y-%m-%d"
+            ).date()
         )
+
 
     def to_json(self) -> dict:
         """Convert Expense object to JSON-compatible dictionary."""

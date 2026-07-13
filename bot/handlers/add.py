@@ -2,11 +2,19 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_add_expenses
 from bot.llm.expense_parser import parse_expenses
-
+from bot.utils.ratelimit import allow
 
 async def add_handle(update: Update, context: CallbackContext):
     """Handle for insertion of new expenses."""
     message_text = update.message.text
+
+    if len(message_text) > 500:
+        await update.message.reply_text("Message too long (max 500 chars).")
+        return
+
+    if not allow(update.effective_user.id):
+        await update.message.reply_text("Too many requests, wait a minute.")
+        return
 
     expenses = parse_expenses(message_text)
     if not expenses:

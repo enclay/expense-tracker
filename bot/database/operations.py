@@ -90,6 +90,8 @@ def sql_get_expense_by_id(expense_id: int, user_id: int):
             """
             cursor.execute(query, (expense_id, user_id))
             row = cursor.fetchone()
+            if row is None:
+                return None
 
             return ExpenseWithId(
                 id=row[0],
@@ -101,7 +103,7 @@ def sql_get_expense_by_id(expense_id: int, user_id: int):
 
     except sqlite3.Error as e:
         logger.error(f"Error listing expenses: {e}")
-        return []
+        return None
 
 
 def sql_delete_expenses(user_id: int, expense_ids: List[int]):
@@ -176,14 +178,17 @@ def sql_get_user_by_id(user_id: int):
 
             cursor.execute(query, (user_id,))
             row = cursor.fetchone()
+            if row is None:
+                return User(user_id, "usd")
+
             return User(int(row[0]), row[1])
 
     except sqlite3.Error as e:
         logger.error(f"Error trying to retrieve user {user_id}: {e}")
-
+        return User(user_id, "usd")
 
 def sql_update_user(user: User):
-    """Get user by id"""
+    """Update user settings"""
     try:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
