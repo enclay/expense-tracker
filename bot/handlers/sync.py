@@ -1,10 +1,10 @@
 import json
-from datetime import datetime, date
 from io import BytesIO
 from telegram import Update, InputFile
 from telegram.ext import CallbackContext
 from bot.database.operations import sql_list_expenses, sql_add_expenses
 from bot.models.expense import Expense
+from bot.utils.ratelimit import allow
 
 
 async def export_handle(update: Update, context: CallbackContext):
@@ -36,8 +36,16 @@ async def import_handle(update: Update, context: CallbackContext):
     """Import user's spendings from a JSON file."""
     user_id = update.effective_user.id
 
+    if not allow(user_id):
+        await update.message.reply_text("Too many requests, wait a minute.")
+        return
+
     if not update.message.document:
         await update.message.reply_text("No valid file found.")
+        return
+
+    if update.message.document.file_size > 100_000:
+        await update.message.reply_text("File too large (max 100 KB).")
         return
 
     file = await update.message.document.get_file()
@@ -49,19 +57,7 @@ async def import_handle(update: Update, context: CallbackContext):
         if not isinstance(data, list):
             raise ValueError("The root element must be a list.")
 
-        expenses = []
-        required_keys = ["description", "cost", "currency", "payment_date"]
-
-        for entry in data:
-            if not all(key in entry for key in required_keys):
-                raise ValueError("Some entries are missing required fields.")
-
-            expenses.append(Expense(
-                description=entry["description"],
-                cost=float(entry["cost"]),
-                currency=entry["currency"],
-                payment_date=date.fromisoformat(entry["payment_date"])
-            ))
+        expenses = [Expense.from_json(entry) for entry in data]
 
         if expenses:
             sql_add_expenses(user_id, expenses)
@@ -69,5 +65,5 @@ async def import_handle(update: Update, context: CallbackContext):
         else:
             await update.message.reply_text("No valid expenses found in the JSON file.")
 
-    except json.JSONDecodeError:
-        await update.message.reply_text("Invalid JSON format. Please ensure the file contains valid JSON.")
+    except (json.JSONDecodeError, ValueError) as e:
+        await update.message.reply_text(f"Invalid file: {e}")

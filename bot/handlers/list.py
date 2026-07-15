@@ -3,6 +3,7 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
+from telegram.helpers import escape_markdown
 from bot.database.operations import sql_list_expenses, sql_get_user_by_id
 from bot.utils.currency import get_currency_symbol
 from bot.utils.exchange_rate import EXCHANGE_RATES
@@ -44,7 +45,7 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
         message_text += f"\n`{get_currency_symbol(user.currency)}{total:.2f}`\n\n"
 
         for exp in expenses:
-            message_text += f"- [{exp.description}]({BOT_URL}?start=expense_{exp.id}) "
+            message_text += f"- [{escape_markdown(exp.description)}]({BOT_URL}?start=expense_{exp.id}) "
             message_text += f"- {exp.cost}{get_currency_symbol(exp.currency)} "
             message_text += f"({exp.payment_date.strftime('%d %b')}) \n"
 

@@ -1,6 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
+from telegram.helpers import escape_markdown
 from bot.database.operations import sql_delete_expenses, sql_get_expense_by_id, sql_update_description
+from bot.utils.config import BOT_URL
 from bot.utils.currency import get_currency_symbol
 
 async def deeplink_handle(update: Update, context: CallbackContext):
@@ -13,6 +15,14 @@ async def deeplink_handle(update: Update, context: CallbackContext):
     if args and args[0].startswith("expense_"):
         expense_id = args[0].split("_")[1]
         await _view_expense(update, context, expense_id)
+    else:
+        await update.message.reply_text(
+            "Welcome to Expense Tracker!\n"
+            "Just type what you spent recently and I'll save it for you.\n\n"
+            "Example:\n"
+            "`12€ for lunch and 3.50 for coffee yesterday`",
+            parse_mode="Markdown"
+        )
 
 async def _view_expense(update: Update, context: CallbackContext, expense_id: int):
     """View selected expense."""
@@ -30,7 +40,7 @@ async def _view_expense(update: Update, context: CallbackContext, expense_id: in
         [InlineKeyboardButton("Cancel", callback_data=f"expense_view_cancel")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    reply_message = f"[{exp.description}](https://t.me/fintest11_bot?start=expense_{exp.id})\n"
+    reply_message = f"[{escape_markdown(exp.description)}]({BOT_URL}?start=expense_{exp.id})\n"
     reply_message += f"cost: {exp.cost}{get_currency_symbol(exp.currency)}\n"
     reply_message += f"date: {exp.payment_date.strftime('%d %b')}"
 
