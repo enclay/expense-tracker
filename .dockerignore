@@ -1,3 +1,6 @@
 .env
 .git
 .docker-data
+.github
+tests
+.pytest_cache
