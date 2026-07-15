@@ -70,7 +70,8 @@ async def change_description_handle(update: Update, context: CallbackContext):
     message = update.message
 
     expense_id = context.user_data.pop("pending_description_change")
-    sql_update_description(user_id, expense_id, message.text)
+     # Limit description to 100 characters
+    sql_update_description(user_id, expense_id, message.text[:100])
 
     await update.message.reply_text(f"Description successfully changed to \"{message.text}\"!")
 

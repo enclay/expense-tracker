@@ -44,10 +44,15 @@ async def _refresh_list(update: Update, context: CallbackContext, period: dateti
 
         message_text += f"\n`{get_currency_symbol(user.currency)}{total:.2f}`\n\n"
 
-        for exp in expenses:
+        MAX_LISTED = 50
+
+        for exp in expenses[:MAX_LISTED]:
             message_text += f"- [{escape_markdown(exp.description)}]({BOT_URL}?start=expense_{exp.id}) "
             message_text += f"- {exp.cost}{get_currency_symbol(exp.currency)} "
             message_text += f"({exp.payment_date.strftime('%d %b')}) \n"
+
+        if len(expenses) > MAX_LISTED:
+            message_text += f"\n...and {len(expenses) - MAX_LISTED} more. Use /export for full data."
 
     callback_date = period.strftime("%Y-%m")
 

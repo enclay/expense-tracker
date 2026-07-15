@@ -1,5 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
+from telegram.helpers import escape_markdown
 from bot.database.operations import sql_add_expenses
 from bot.llm.expense_parser import parse_expenses
 from bot.utils.ratelimit import allow
@@ -33,7 +34,7 @@ async def add_handle(update: Update, context: CallbackContext):
 
     confirmation_text = "Please confirm your expenses:\n\n"
     for i, exp in enumerate(expenses, start=1):
-        confirmation_text += f"*{i}.* {exp.description} - {exp.cost:.2f} "
+        confirmation_text += f"*{i}.* {escape_markdown(exp.description)} - {exp.cost:.2f} "
         confirmation_text += f"{exp.currency.upper()} ({exp.payment_date})\n"
 
     keyboard = [

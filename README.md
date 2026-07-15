@@ -2,6 +2,8 @@
 
 A sophisticated Telegram bot that simplifies personal finance tracking using Natural Language Processing. Instead of filling out tedious forms, just tell the bot what you spent, and let the AI handle the structured data.
 
+**Try it out:** [@enclay_expenses_bot](https://t.me/enclay_expenses_bot)
+
 ## Table of Contents
 * [Features](#features)
 * [Tech Stack](#tech-stack)
@@ -51,8 +53,8 @@ A sophisticated Telegram bot that simplifies personal finance tracking using Nat
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/enclay/enclay-expense-tracker.git
-   cd enclay-expense-tracker
+   git clone https://github.com/enclay/expense-tracker.git
+   cd expense-tracker
    ```
 2. **Install Dependencies:**
    ```bash

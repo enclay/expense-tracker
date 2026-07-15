@@ -32,8 +32,13 @@ async def change_currency_callback(update: Update, context: CallbackContext):
     data = query.data
 
     await query.answer()
+
+    currency = data.split(":")[1]
+    if currency not in ("usd", "eur", "rub"):
+        return
+
     
-    user = User(user_id, currency=data.split(":")[1])
+    user = User(user_id, currency=currency)
     sql_update_user(user)
 
     await context.bot.delete_message(
