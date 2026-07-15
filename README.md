@@ -11,6 +11,7 @@ A sophisticated Telegram bot that simplifies personal finance tracking using Nat
 * [Tech Stack](#tech-stack)
 * [Getting Started](#getting-started)
 * [Usage](#usage)
+* [Testing](#testing)
 * [Project Structure](#project-structure)
 
 ---
@@ -38,6 +39,7 @@ A sophisticated Telegram bot that simplifies personal finance tracking using Nat
 * **Framework:** `python-telegram-bot`
 * **Intelligence:** OpenAI API (`gpt-4o` / `gpt-3.5-turbo`)
 * **Database:** SQLite (Relational storage)
+* **Testing:** pytest + GitHub Actions CI
 * **Dependency Management:** Poetry
 * **DevOps:** Docker & Docker Compose
 
@@ -95,6 +97,15 @@ Simply send a text message. The bot will parse it and ask for confirmation:
   1. **Döner** - 8.00 EUR (2026-02-19)
   2. **Water** - 2.50 EUR (2026-02-19)
 
+## Testing
+
+Run the test suite locally:
+```bash
+poetry run pytest
+```
+
+Tests cover expense parsing (with mocked OpenAI), input validation, rate limiting, and database operations. They run automatically on every push via GitHub Actions.
+
 ## Project Structure
 ```Plaintext
 ├── bot/
@@ -103,7 +114,9 @@ Simply send a text message. The bot will parse it and ask for confirmation:
 │   ├── llm/         # OpenAI integration and prompt engineering
 │   ├── models/      # Dataclasses for Expense and User objects
 │   └── utils/       # Currency symbols, exchange rates, and config
+├── tests/           # Unit tests (pytest)
 ├── migrations/      # SQL schema initialization
 ├── scripts/         # Automation scripts
+├── .github/         # CI workflow
 └── docker-compose.yml
 ```
