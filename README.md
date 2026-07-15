@@ -1,5 +1,7 @@
 # AI-Powered Expense Tracker Bot
 
+![CI](https://github.com/enclay/expense-tracker/actions/workflows/ci.yml/badge.svg)
+
 A sophisticated Telegram bot that simplifies personal finance tracking using Natural Language Processing. Instead of filling out tedious forms, just tell the bot what you spent, and let the AI handle the structured data.
 
 **Try it out:** [@enclay_expenses_bot](https://t.me/enclay_expenses_bot)
